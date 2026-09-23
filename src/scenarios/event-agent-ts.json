@@ -1,0 +1,21 @@
+{
+  "id": "event-agent-ts",
+  "name": "Event-driven agent worker",
+  "description": "A Service Bus-triggered agent with repeat-safe memory, approval gates, tenant-scoped events, retries, and dead-lettering.",
+  "category": "event",
+  "base": "typescript",
+  "features": [
+    "cosmos-core",
+    "managed-identity",
+    "emulator",
+    "vector-search",
+    "agent-memory",
+    "approval-actions",
+    "telemetry",
+    "customer-platform",
+    "container-apps",
+    "event-worker",
+    "github-copilot"
+  ],
+  "capabilities": ["event-driven", "service-bus", "agent-memory", "approval-actions", "idempotency", "tenant-isolation", "retries", "dead-lettering"]
+}
