@@ -2,6 +2,23 @@
   "name": "create-cosmos-agent",
   "version": "0.1.0",
   "description": "Composable scaffolding for tenant-safe Azure Cosmos DB agents",
+  "keywords": [
+    "azure",
+    "cosmosdb",
+    "ai-agent",
+    "scaffolding",
+    "cli",
+    "typescript",
+    "vector-search"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sajeetharan/cosmos-agent-starter.git"
+  },
+  "homepage": "https://github.com/sajeetharan/cosmos-agent-starter#readme",
+  "bugs": {
+    "url": "https://github.com/sajeetharan/cosmos-agent-starter/issues"
+  },
   "type": "module",
   "bin": {
     "create-cosmos-agent": "dist/index.js"
@@ -19,7 +36,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "validate": "npm run typecheck && npm run test && npm run build"
+    "validate": "npm run typecheck && npm run test && npm run build",
+    "prepublishOnly": "npm run validate"
   },
   "engines": {
     "node": ">=20"
@@ -36,6 +54,10 @@
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.0",
     "vitest": "^5.0.1"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "license": "MIT"
 }
