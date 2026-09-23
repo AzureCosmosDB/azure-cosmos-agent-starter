@@ -45,6 +45,17 @@ export interface AgentMemoryStore {
   list(input: ListMemoryInput): Promise<Page<AgentMemory>>;
 }
 
+export type MemoryBackend = "in-memory" | "cosmos";
+
+export function resolveMemoryBackend(environment: NodeJS.ProcessEnv): MemoryBackend {
+  const configured = environment.MEMORY_BACKEND;
+  if (configured === "in-memory" || configured === "cosmos") return configured;
+  if (configured) {
+    throw new Error('MEMORY_BACKEND must be either "in-memory" or "cosmos".');
+  }
+  return environment.NODE_ENV === "production" ? "cosmos" : "in-memory";
+}
+
 export interface EmbeddingProvider { embed(text: string): Promise<number[]> }
 export class DeterministicEmbeddingProvider implements EmbeddingProvider {
   async embed(text: string): Promise<number[]> {

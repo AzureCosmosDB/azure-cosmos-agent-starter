@@ -12,12 +12,15 @@ afterEach(async () => {
 
 describe("CLI execution", () => {
   it("prints help and version", async () => {
+    const packageJson = JSON.parse(
+      await readFile(new URL("../../package.json", import.meta.url), "utf8"),
+    ) as { version: string };
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     await expect(runCli(["--help"])).resolves.toBe(0);
     expect(log.mock.calls.flat().join("\n")).toMatch(/Create options:/);
     log.mockClear();
     await expect(runCli(["--version"])).resolves.toBe(0);
-    expect(log).toHaveBeenCalledWith("0.1.0");
+    expect(log).toHaveBeenCalledWith(packageJson.version);
   });
 
   it("emits a JSON dry-run plan without writing files", async () => {

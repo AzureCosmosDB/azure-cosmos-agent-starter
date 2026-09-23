@@ -1,8 +1,10 @@
+import "dotenv/config";
 import express from "express";
 import { z } from "zod";
 import {
   CosmosAgentMemoryStore,
   InMemoryMemoryStore,
+  resolveMemoryBackend,
 } from "../../../packages/memory/src/index.js";
 import {
   CosmosActionStore,
@@ -13,7 +15,7 @@ import type { RequestContext } from "../../../packages/auth/src/index.js";
 
 const app = express();
 app.use(express.json({ limit: "64kb" }));
-const useInMemory = process.env.MEMORY_BACKEND === "in-memory";
+const useInMemory = resolveMemoryBackend(process.env) === "in-memory";
 const memories = useInMemory ? new InMemoryMemoryStore() : new CosmosAgentMemoryStore();
 const actions = useInMemory ? new InMemoryActionStore() : new CosmosActionStore();
 

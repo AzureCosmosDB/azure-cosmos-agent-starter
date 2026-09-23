@@ -53,17 +53,11 @@ npm test
 ### 3. Start the API without a database
 
 ```powershell
-$env:MEMORY_BACKEND = "in-memory"
 npm run dev
 ```
 
-For Bash or zsh:
-
-```bash
-MEMORY_BACKEND=in-memory npm run dev
-```
-
-The API listens on `http://localhost:3000`. Keep it running and open another terminal.
+Development defaults to the in-memory backend. The API listens on `http://localhost:3000`; keep
+it running and open another terminal.
 
 ### 4. Verify health
 
@@ -292,9 +286,12 @@ The generated app uses:
 cd my-agent
 npm install
 Copy-Item .env.example .env
-docker compose up -d
 npm run dev
 ```
+
+This starts with in-memory storage. To use Cosmos DB, set `MEMORY_BACKEND=cosmos` in `.env` and
+configure either the emulator credentials or an Azure endpoint. Start the emulator with
+`docker compose up -d` when using the local Cosmos path.
 
 The emulator vNext image is preview and may not support every Azure vector/HPK feature. The
 in-memory security suite runs everywhere; set `RUN_COSMOS_INTEGRATION=true` only against a prepared

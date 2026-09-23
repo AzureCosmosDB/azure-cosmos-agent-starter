@@ -1,8 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { InMemoryMemoryStore } from "../../packages/memory/src/index.js";
+import {
+  InMemoryMemoryStore,
+  resolveMemoryBackend,
+} from "../../packages/memory/src/index.js";
 
 const context = { tenantId: "tenant-a", userId: "user-a", roles: [], correlationId: "correlation-1" };
 describe("memory store", () => {
+  it("defaults development to memory and production to Cosmos", () => {
+    expect(resolveMemoryBackend({})).toBe("in-memory");
+    expect(resolveMemoryBackend({ NODE_ENV: "development" })).toBe("in-memory");
+    expect(resolveMemoryBackend({ NODE_ENV: "production" })).toBe("cosmos");
+    expect(resolveMemoryBackend({ MEMORY_BACKEND: "cosmos" })).toBe("cosmos");
+    expect(() => resolveMemoryBackend({ MEMORY_BACKEND: "invalid" })).toThrow(
+      /MEMORY_BACKEND/,
+    );
+  });
+
   it("stores, recalls, paginates, cites, and deletes memory", async () => {
     const store = new InMemoryMemoryStore();
     const memory = await store.remember({

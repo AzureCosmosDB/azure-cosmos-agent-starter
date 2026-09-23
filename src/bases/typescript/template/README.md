@@ -7,9 +7,12 @@ Tenant-safe TypeScript agent memory on Azure Cosmos DB.
 ```powershell
 npm install
 Copy-Item .env.example .env
-docker compose up -d
 npm run dev
 ```
+
+Development defaults to the in-memory adapter, so the API starts without Docker or Azure.
+To use the emulator, run `docker compose up -d`, set `MEMORY_BACKEND=cosmos` and the emulator
+credentials in `.env`, then restart the API.
 
 The API expects trusted development headers `x-tenant-id` and `x-user-id`. Replace this development
 adapter with verified Entra token claims before deployment. Never accept identity fields from agent tools.
