@@ -25,6 +25,22 @@ npx create-cosmos-agent my-cosmos-agent `
   --no-git
 ```
 
+If a corporate npm proxy has not mirrored the package yet, download the release tarball from
+GitHub and ask `npx` to use that local package:
+
+```powershell
+$package = Join-Path $env:TEMP "create-cosmos-agent-0.1.0.tgz"
+
+Invoke-WebRequest `
+  -Uri "https://github.com/sajeetharan/cosmos-agent-starter/releases/download/v0.1.0/create-cosmos-agent-0.1.0.tgz" `
+  -OutFile $package
+
+npx --yes --package $package create-cosmos-agent my-cosmos-agent `
+  --template agent-memory-ts `
+  --yes `
+  --no-git
+```
+
 ### 2. Install and test the generated project
 
 ```powershell
