@@ -16,7 +16,8 @@ async function destination(): Promise<string> {
 const options = (path: string) => ({
   command: "create" as const, destination: path, template: "agent-memory-ts",
   localMode: "emulator" as const, capacity: "serverless" as const,
-  includeWeb: true, initializeGit: false, yes: true,
+  includeWeb: true, initializeGit: false, yes: true, force: true, dryRun: false,
+  json: false, projectDirectory: ".",
 });
 
 describe("scenario composition", () => {
@@ -38,7 +39,7 @@ describe("scenario composition", () => {
   it("refuses a non-empty destination without confirmation", async () => {
     const path = await destination();
     await writeFile(join(path, "existing.txt"), "preserve me");
-    await expect(composeProject({ ...options(path), yes: false })).rejects.toThrow(/not empty/i);
+    await expect(composeProject({ ...options(path), force: false })).rejects.toThrow(/not empty/i);
   });
   it("doctor detects intentionally unsafe patterns", async () => {
     const path = await destination();

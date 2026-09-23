@@ -15,6 +15,7 @@ describe("generated-file validation", () => {
     await composeProject({
       command: "create", destination: good, template: "agent-memory-ts", localMode: "emulator",
       capacity: "serverless", includeWeb: true, initializeGit: false, yes: true,
+      force: true, dryRun: false, json: false, projectDirectory: ".",
     });
     await expect(validateGeneratedFiles(good)).resolves.toBeUndefined();
     await expect(validateGeneratedFiles(bad)).rejects.toThrow(/incomplete/i);

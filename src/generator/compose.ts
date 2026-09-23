@@ -52,7 +52,7 @@ export async function loadScenario(id: string): Promise<Scenario> {
 export async function composeProject(options: CliOptions): Promise<string> {
   if (!options.destination) throw new Error("A destination is required.");
   const destination = resolve(options.destination);
-  await assertSafeDestination(destination, options.yes);
+  await assertSafeDestination(destination, options.force);
   const scenario = await loadScenario(options.template);
   await mkdir(destination, { recursive: true });
   await copyTemplate(join(sourceRoot, "bases", scenario.base, "template"), destination);
