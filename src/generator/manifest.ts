@@ -21,7 +21,15 @@ export interface ProjectManifest {
   };
   authentication: {
     production: "entra-id";
-    local: "emulator" | "azure";
+    development: "local" | "entra";
+  };
+  ai: {
+    provider: "mock" | "azure-openai" | "openai" | "ollama";
+  };
+  storage: {
+    development: "in-memory" | "cosmos";
+    production: "cosmos";
+    cosmosConnection: "emulator" | "azure";
   };
   features: string[];
 }

@@ -14,7 +14,8 @@ describe("generated-file validation", () => {
     created.push(good, bad);
     await composeProject({
       command: "create", destination: good, template: "agent-memory-ts", localMode: "emulator",
-      capacity: "serverless", includeWeb: true, initializeGit: false, yes: true,
+      capacity: "serverless", provider: "mock", authMode: "local", storage: "in-memory",
+      includeWeb: true, initializeGit: false, yes: true,
       force: true, dryRun: false, json: false, projectDirectory: ".",
     });
     await expect(validateGeneratedFiles(good)).resolves.toBeUndefined();

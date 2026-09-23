@@ -113,7 +113,13 @@ export async function composeProject(options: CliOptions): Promise<string> {
       partitioning: "hierarchical",
       vectorSearch: true,
     },
-    authentication: { production: "entra-id", local: options.localMode },
+    authentication: { production: "entra-id", development: options.authMode },
+    ai: { provider: options.provider },
+    storage: {
+      development: options.storage,
+      production: "cosmos",
+      cosmosConnection: options.localMode,
+    },
     features: scenario.capabilities,
   };
   await writeFile(join(destination, "cosmos-project.json"), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -124,6 +130,9 @@ export async function composeProject(options: CliOptions): Promise<string> {
     SCENARIO_NAME: scenario.name,
     SCENARIO_DESCRIPTION: scenario.description,
     SCENARIO_CATEGORY: scenario.category,
+    DEFAULT_AI_PROVIDER: options.provider,
+    DEFAULT_AUTH_MODE: options.authMode,
+    DEFAULT_STORAGE_BACKEND: options.storage,
   });
   await configureWebOption(destination, options.includeWeb);
   await validateGeneratedFiles(destination);

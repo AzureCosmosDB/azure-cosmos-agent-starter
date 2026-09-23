@@ -16,6 +16,7 @@ async function destination(): Promise<string> {
 const options = (path: string) => ({
   command: "create" as const, destination: path, template: "agent-memory-ts",
   localMode: "emulator" as const, capacity: "serverless" as const,
+  provider: "mock" as const, authMode: "local" as const, storage: "in-memory" as const,
   includeWeb: true, initializeGit: false, yes: true, force: true, dryRun: false,
   json: false, projectDirectory: ".",
 });
@@ -63,6 +64,27 @@ describe("scenario composition", () => {
       expect(await readFile(join(path, "apps", "api", "src", "server.ts"), "utf8"))
         .toContain(`id: "${template}"`);
     }
+  });
+  it("writes assisted provider, authentication, and storage selections", async () => {
+    const path = await destination();
+    await composeProject({
+      ...options(path),
+      template: "chat-agent-ts",
+      provider: "ollama",
+      authMode: "entra",
+      storage: "cosmos",
+      localMode: "azure",
+    });
+    const environment = await readFile(join(path, ".env.example"), "utf8");
+    expect(environment).toMatch(/^AI_PROVIDER=ollama$/m);
+    expect(environment).toMatch(/^AUTH_MODE=entra$/m);
+    expect(environment).toMatch(/^MEMORY_BACKEND=cosmos$/m);
+    expect(JSON.parse(await readFile(join(path, "cosmos-project.json"), "utf8")))
+      .toMatchObject({
+        ai: { provider: "ollama" },
+        authentication: { development: "entra" },
+        storage: { development: "cosmos", cosmosConnection: "azure" },
+      });
   });
   it("produces a buildable API-only layout with --no-web", async () => {
     const path = await destination();

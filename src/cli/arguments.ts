@@ -1,5 +1,8 @@
 export type Capacity = "serverless" | "autoscale";
 export type LocalMode = "emulator" | "azure";
+export type AIProvider = "mock" | "azure-openai" | "openai" | "ollama";
+export type AuthMode = "local" | "entra";
+export type StorageBackend = "in-memory" | "cosmos";
 export type CliCommand = "create" | "list" | "doctor" | "validate" | "help" | "version";
 
 export interface CliOptions {
@@ -9,6 +12,9 @@ export interface CliOptions {
   template: string;
   localMode: LocalMode;
   capacity: Capacity;
+  provider: AIProvider;
+  authMode: AuthMode;
+  storage: StorageBackend;
   includeWeb: boolean;
   initializeGit: boolean;
   yes: boolean;
@@ -17,11 +23,14 @@ export interface CliOptions {
   json: boolean;
 }
 
-const valueFlags = new Map<string, "template" | "capacity" | "localMode" | "projectDirectory">([
+const valueFlags = new Map<string, "template" | "capacity" | "localMode" | "projectDirectory" | "provider" | "authMode" | "storage">([
   ["--template", "template"],
   ["-t", "template"],
   ["--capacity", "capacity"],
   ["--local", "localMode"],
+  ["--provider", "provider"],
+  ["--auth", "authMode"],
+  ["--storage", "storage"],
   ["--project", "projectDirectory"],
   ["-C", "projectDirectory"],
 ] as const);
@@ -56,8 +65,11 @@ function normalizeArgs(args: string[]): string[] {
 export function parseArguments(rawArgs: string[]): CliOptions {
   const args = normalizeArgs(rawArgs);
   const first = args[0];
+  const wizard = first === "wizard";
   const explicitCommand =
-    first === "create" || first === "doctor" || first === "validate" || first === "list"
+    wizard
+      ? "create"
+      : first === "create" || first === "doctor" || first === "validate" || first === "list"
       ? first
       : undefined;
   const commandOffset = explicitCommand ? 1 : 0;
@@ -65,6 +77,9 @@ export function parseArguments(rawArgs: string[]): CliOptions {
   let template = "chat-agent-ts";
   let capacity: string = "serverless";
   let localMode: string = "emulator";
+  let provider: string = "mock";
+  let authMode: string = "local";
+  let storage: string = "in-memory";
   let projectDirectory = ".";
   let destination: string | undefined;
   let includeWeb = true;
@@ -85,6 +100,9 @@ export function parseArguments(rawArgs: string[]): CliOptions {
       if (valueKey === "template") template = value;
       if (valueKey === "capacity") capacity = value;
       if (valueKey === "localMode") localMode = value;
+      if (valueKey === "provider") provider = value;
+      if (valueKey === "authMode") authMode = value;
+      if (valueKey === "storage") storage = value;
       if (valueKey === "projectDirectory") projectDirectory = value;
       index += 1;
       continue;
@@ -153,6 +171,17 @@ export function parseArguments(rawArgs: string[]): CliOptions {
   if (localMode !== "emulator" && localMode !== "azure") {
     throw new Error(`Unsupported local mode "${localMode}". Use emulator or azure.`);
   }
+  if (!["mock", "azure-openai", "openai", "ollama"].includes(provider)) {
+    throw new Error(
+      `Unsupported provider "${provider}". Use mock, azure-openai, openai, or ollama.`,
+    );
+  }
+  if (authMode !== "local" && authMode !== "entra") {
+    throw new Error(`Unsupported authentication mode "${authMode}". Use local or entra.`);
+  }
+  if (storage !== "in-memory" && storage !== "cosmos") {
+    throw new Error(`Unsupported storage backend "${storage}". Use in-memory or cosmos.`);
+  }
   if (force && dryRun) {
     throw new Error("--force and --dry-run cannot be used together.");
   }
@@ -164,6 +193,9 @@ export function parseArguments(rawArgs: string[]): CliOptions {
     "-t",
     "--capacity",
     "--local",
+    "--provider",
+    "--auth",
+    "--storage",
     "--web",
     "--no-web",
     "--git",
@@ -193,6 +225,9 @@ export function parseArguments(rawArgs: string[]): CliOptions {
     template,
     localMode,
     capacity,
+    provider: provider as AIProvider,
+    authMode: authMode as AuthMode,
+    storage: storage as StorageBackend,
     includeWeb,
     initializeGit,
     yes,

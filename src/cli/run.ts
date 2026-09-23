@@ -6,6 +6,12 @@ import { promisify } from "node:util";
 import { parseArguments } from "./arguments.js";
 import { completeInteractiveOptions } from "./prompts.js";
 import {
+  completionCandidates,
+  completionScript,
+  formatCompletionCandidates,
+  type CompletionShell,
+} from "./completion.js";
+import {
   helpText,
   nextSteps,
   printFindings,
@@ -31,6 +37,20 @@ function writeJson(value: unknown): void {
 export async function runCli(args: string[]): Promise<number> {
   let json = args.includes("--json");
   try {
+    if (args[0] === "completion") {
+      const shell = args[1];
+      if (shell !== "powershell" && shell !== "bash" && shell !== "zsh") {
+        throw new Error("The completion command requires powershell, bash, or zsh.");
+      }
+      console.log(completionScript(shell as CompletionShell));
+      return 0;
+    }
+    if (args[0] === "__complete") {
+      console.log(formatCompletionCandidates(
+        completionCandidates(args.slice(1), await listScenarios()),
+      ));
+      return 0;
+    }
     let options = parseArguments(args);
     json = options.json;
     if (options.command === "help") {
@@ -99,6 +119,9 @@ export async function runCli(args: string[]): Promise<number> {
         options: {
           localMode: options.localMode,
           capacity: options.capacity,
+          provider: options.provider,
+          authMode: options.authMode,
+          storage: options.storage,
           includeWeb: options.includeWeb,
           initializeGit: options.initializeGit,
           force: options.force,

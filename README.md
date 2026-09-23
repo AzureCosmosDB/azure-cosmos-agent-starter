@@ -57,6 +57,56 @@ List every template:
 npx create-cosmos-agent list
 ```
 
+### Guided setup
+
+Run the wizard when you want descriptions and numbered choices instead of remembering flags:
+
+```powershell
+create-cosmos-agent wizard my-customer-agent
+```
+
+The wizard explains and selects:
+
+- scenario template;
+- AI provider;
+- development authentication;
+- storage backend and Cosmos connection;
+- Azure capacity;
+- React application;
+- Git initialization.
+
+Press Enter to accept the recommended local defaults.
+
+### Shell IntelliSense and tab completion
+
+PowerShell, for the current session:
+
+```powershell
+create-cosmos-agent completion powershell | Out-String | Invoke-Expression
+```
+
+Persist it in your PowerShell profile:
+
+```powershell
+New-Item -ItemType File -Force $PROFILE | Out-Null
+create-cosmos-agent completion powershell | Add-Content $PROFILE
+```
+
+Bash:
+
+```bash
+source <(create-cosmos-agent completion bash)
+```
+
+Zsh:
+
+```zsh
+source <(create-cosmos-agent completion zsh)
+```
+
+Completion dynamically suggests commands, flags, scenario templates, providers, authentication
+modes, storage backends, Cosmos connection targets, and capacity models with descriptions.
+
 ## Test the generated application
 
 ```powershell
@@ -225,6 +275,7 @@ create-cosmos-agent [create] <destination> [options]
 create-cosmos-agent list [--json]
 create-cosmos-agent doctor [project] [--json]
 create-cosmos-agent validate [project] [--json]
+create-cosmos-agent completion <powershell|bash|zsh>
 ```
 
 ### Commands
@@ -232,15 +283,20 @@ create-cosmos-agent validate [project] [--json]
 | Command | Purpose |
 |---|---|
 | `create [destination]` | Create a project; this is the default command |
+| `wizard [destination]` | Create using descriptive numbered choices |
 | `list` | List scenario templates |
 | `doctor [project]` | Inspect security and configuration patterns |
 | `validate [project]` | Run generated-file, type, build, test, and Bicep checks |
+| `completion <shell>` | Print dynamic PowerShell, Bash, or Zsh completion setup |
 
 ### Create options
 
 | Option | Description | Default |
 |---|---|---|
 | `-t, --template <id>` | Scenario template | `chat-agent-ts` |
+| `--provider <provider>` | `mock`, `azure-openai`, `openai`, or `ollama` | `mock` |
+| `--auth <mode>` | `local` or `entra` | `local` |
+| `--storage <backend>` | `in-memory` or `cosmos` | `in-memory` |
 | `--local <mode>` | `emulator` or `azure` | `emulator` |
 | `--capacity <model>` | `serverless` or `autoscale` | `serverless` |
 | `--web`, `--no-web` | Include or exclude the React application | Included |
@@ -261,6 +317,8 @@ create-cosmos-agent validate [project] [--json]
 Examples:
 
 ```powershell
+create-cosmos-agent wizard my-agent
+create-cosmos-agent my-agent --provider azure-openai --auth entra --storage cosmos --yes
 npx create-cosmos-agent my-agent --dry-run --json
 npx create-cosmos-agent doctor .\my-agent
 npx create-cosmos-agent validate -C .\my-agent --json
@@ -275,7 +333,7 @@ If a corporate npm proxy has not mirrored the current release, download the matc
 from the GitHub release and pass the local file to `npx`:
 
 ```powershell
-$version = "0.2.1"
+$version = "0.3.0"
 $package = Join-Path $env:TEMP "create-cosmos-agent-$version.tgz"
 
 Invoke-WebRequest `
