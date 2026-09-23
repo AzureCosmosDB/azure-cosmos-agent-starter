@@ -275,7 +275,7 @@ If a corporate npm proxy has not mirrored the current release, download the matc
 from the GitHub release and pass the local file to `npx`:
 
 ```powershell
-$version = "0.2.0"
+$version = "0.2.1"
 $package = Join-Path $env:TEMP "create-cosmos-agent-$version.tgz"
 
 Invoke-WebRequest `

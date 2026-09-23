@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CliOptions } from "../cli/arguments.js";
@@ -14,10 +14,13 @@ async function copyTemplate(source: string, destination: string): Promise<void> 
 async function renameDotfiles(directory: string): Promise<void> {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
-    if (entry.isDirectory()) await renameDotfiles(path);
     if (entry.name.startsWith("_dot_")) {
-      await rename(path, join(directory, `.${entry.name.slice(5)}`));
+      const destination = join(directory, `.${entry.name.slice(5)}`);
+      await cp(path, destination, { recursive: entry.isDirectory(), force: true });
+      await rm(path, { recursive: true, force: true });
+      continue;
     }
+    if (entry.isDirectory()) await renameDotfiles(path);
   }
 }
 

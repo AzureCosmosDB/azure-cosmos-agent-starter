@@ -80,6 +80,19 @@ describe("scenario composition", () => {
     await writeFile(join(path, "existing.txt"), "preserve me");
     await expect(composeProject({ ...options(path), force: false })).rejects.toThrow(/not empty/i);
   });
+  it("merges generated dot-directories when force-overwriting an existing project", async () => {
+    const path = await destination();
+    await composeProject(options(path));
+    await writeFile(join(path, ".github", "customer-owned.txt"), "preserve me");
+    await expect(composeProject({
+      ...options(path),
+      template: "chat-agent-ts",
+      force: true,
+    })).resolves.toBe(path);
+    expect(await readFile(join(path, ".github", "customer-owned.txt"), "utf8")).toBe("preserve me");
+    expect(await readFile(join(path, ".github", "copilot-instructions.md"), "utf8"))
+      .toMatch(/DefaultAzureCredential/);
+  });
   it("doctor detects intentionally unsafe patterns", async () => {
     const path = await destination();
     await composeProject(options(path));
