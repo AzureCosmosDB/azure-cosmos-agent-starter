@@ -29,10 +29,10 @@ If a corporate npm proxy has not mirrored the package yet, download the release 
 GitHub and ask `npx` to use that local package:
 
 ```powershell
-$package = Join-Path $env:TEMP "create-cosmos-agent-0.1.0.tgz"
+$package = Join-Path $env:TEMP "create-cosmos-agent-0.1.1.tgz"
 
 Invoke-WebRequest `
-  -Uri "https://github.com/sajeetharan/cosmos-agent-starter/releases/download/v0.1.0/create-cosmos-agent-0.1.0.tgz" `
+  -Uri "https://github.com/sajeetharan/cosmos-agent-starter/releases/download/v0.1.1/create-cosmos-agent-0.1.1.tgz" `
   -OutFile $package
 
 npx --yes --package $package create-cosmos-agent my-cosmos-agent `
