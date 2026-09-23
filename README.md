@@ -11,30 +11,149 @@ and an approval-gated consequential action.
 - Docker for the local Cosmos DB emulator
 - Azure Developer CLI and Azure CLI for deployment
 
-## Quick start
+## Quickstart: run locally in five minutes
 
-Create the flagship TypeScript agent project:
+The npm package is not published yet, so this quickstart runs the CLI from a source checkout.
+It uses the generated in-memory adapter first: no Azure subscription, Cosmos DB account, Docker,
+or credentials are required.
 
-```powershell
-npx create-cosmos-agent my-agent --template agent-memory-ts
-```
-
-The interactive flow asks for:
-
-1. Project destination
-2. Local development mode (`emulator` or `azure`)
-3. Azure capacity (`serverless` or `autoscale`)
-4. Whether to include the example web interface
-5. Whether to initialize Git
-
-For CI, scripts, or users who already know the defaults:
+### 1. Build the CLI
 
 ```powershell
-npx create-cosmos-agent my-agent --yes
+git clone https://github.com/sajeetharan/cosmos-agent-starter.git
+cd cosmos-agent-starter
+npm install
+npm run build
 ```
 
-`--yes` accepts prompt defaults but **does not permit overwriting files**. Use `--force`
-separately and deliberately when generating into a non-empty destination.
+### 2. Generate an agent project
+
+```powershell
+node dist\index.js ..\my-cosmos-agent `
+  --template agent-memory-ts `
+  --yes `
+  --no-git
+```
+
+### 3. Install and test the generated project
+
+```powershell
+cd ..\my-cosmos-agent
+npm install
+npm run typecheck
+npm test
+```
+
+### 4. Start the API without a database
+
+```powershell
+$env:MEMORY_BACKEND = "in-memory"
+npm run dev
+```
+
+For Bash or zsh:
+
+```bash
+MEMORY_BACKEND=in-memory npm run dev
+```
+
+The API listens on `http://localhost:3000`. Keep it running and open another terminal.
+
+### 5. Verify health
+
+```powershell
+Invoke-RestMethod http://localhost:3000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### 6. Store and recall a memory
+
+```powershell
+$headers = @{
+  "x-tenant-id"      = "tenant-a"
+  "x-user-id"        = "user-a"
+  "x-correlation-id" = "quickstart-001"
+}
+
+$memory = @{
+  type          = "preference"
+  content       = "I prefer concise technical answers"
+  threadId      = "thread-001"
+  interactionId = "interaction-001"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://localhost:3000/api/memories `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $memory
+
+$recall = @{
+  query = "How does the user prefer answers?"
+  limit = 5
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://localhost:3000/api/memories/recall `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $recall
+```
+
+The recall response includes the scoped memory, similarity score, memory ID, and source
+interaction citation.
+
+### 7. Inspect and validate
+
+```powershell
+Invoke-RestMethod `
+  -Uri http://localhost:3000/api/diagnostics `
+  -Headers $headers
+
+node ..\cosmos-agent-starter\dist\index.js doctor .
+node ..\cosmos-agent-starter\dist\index.js validate .
+```
+
+### Move to Cosmos DB or Azure
+
+After the in-memory path works:
+
+1. Start Docker Desktop's Linux engine.
+2. Configure `.env` from `.env.example` with the emulator endpoint and emulator key.
+3. Run `docker compose up -d`.
+4. Set `MEMORY_BACKEND=cosmos`.
+5. Run the opt-in integration suite with `RUN_COSMOS_INTEGRATION=true`.
+
+For Azure, sign in with Azure Developer CLI and deploy:
+
+```powershell
+azd auth login
+azd up
+```
+
+Azure deployment can create billable resources. Production uses Managed Identity and Cosmos DB
+data-plane RBAC; it does not generate a production account key.
+
+### After npm publication
+
+Once `create-cosmos-agent` is published, steps 1 and 2 reduce to:
+
+```powershell
+npx create-cosmos-agent my-cosmos-agent --template agent-memory-ts --yes
+```
+
+Without `--yes`, the interactive flow asks for the destination, local mode, Azure capacity,
+example web interface, and Git initialization. `--yes` accepts prompt defaults but **does not
+permit overwriting files**; use `--force` separately and deliberately for a non-empty destination.
 
 ## CLI reference
 
