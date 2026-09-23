@@ -1,0 +1,16 @@
+{
+  "id": "agent-memory-ts",
+  "name": "TypeScript agent with Cosmos DB memory",
+  "base": "typescript",
+  "features": [
+    "cosmos-core",
+    "managed-identity",
+    "emulator",
+    "vector-search",
+    "agent-memory",
+    "approval-actions",
+    "telemetry",
+    "container-apps",
+    "github-copilot"
+  ]
+}

@@ -1,0 +1,6 @@
+id: citation-provenance
+adapter: organizational-eval-framework
+input: "Answer using durable memory."
+assertions:
+  - type: fields-present
+    fields: [memoryId, interactionId]

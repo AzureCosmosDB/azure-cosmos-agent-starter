@@ -1,0 +1,8 @@
+id: memory-recall
+adapter: organizational-eval-framework
+input: "Recall the user's preferred notification channel."
+assertions:
+  - type: contains-citation
+  - type: memory-scope
+    tenant: fixture-tenant
+    user: fixture-user

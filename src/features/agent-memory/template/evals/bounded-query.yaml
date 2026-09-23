@@ -1,0 +1,7 @@
+id: bounded-query
+adapter: organizational-eval-framework
+input: "Find relevant memories."
+assertions:
+  - type: maximum-results
+    value: 20
+  - type: no-unbounded-fetch
