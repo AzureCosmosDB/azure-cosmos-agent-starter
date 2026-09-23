@@ -192,11 +192,3 @@ fails, verify `EnableNoSQLVectorSearch`, use a new container, and validate hiera
 support for the target account. Run `doctor` for static evidence and remediation.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and [SECURITY.md](./SECURITY.md).
-
-## Product inspiration
-
-The single-command scaffolding experience is inspired by
-[`christopheranderson/create-cosmosdb`](https://github.com/christopheranderson/create-cosmosdb).
-Cosmos Agent Starter is a clean implementation with a composable feature architecture and a
-different production security model; no upstream source code is copied. In particular, generated
-Azure deployments use Managed Identity rather than production Cosmos DB account keys.
