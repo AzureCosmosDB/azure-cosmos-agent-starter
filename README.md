@@ -10,9 +10,11 @@ Azure OpenAI, and Cosmos DB without replacing the application contracts.
 
 ## Overview video
 
-[Watch the create-cosmos-agent overview](docs/media/create-cosmos-agent-overview.mp4) to see how
-the guided CLI turns agent architecture choices into a locally runnable application with a
-production path to Azure Cosmos DB.
+[![create-cosmos-agent overview preview](docs/media/create-cosmos-agent-preview.gif)](https://raw.githubusercontent.com/sajeetharan/cosmos-agent-starter/main/docs/media/create-cosmos-agent-overview.mp4)
+
+[Watch the full create-cosmos-agent overview](https://raw.githubusercontent.com/sajeetharan/cosmos-agent-starter/main/docs/media/create-cosmos-agent-overview.mp4)
+to see how the guided CLI turns agent architecture choices into a locally runnable application
+with a production path to Azure Cosmos DB.
 
 ## Customer scenarios
 
