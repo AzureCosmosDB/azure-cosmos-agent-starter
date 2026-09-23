@@ -1,5 +1,6 @@
 import type { RequestContext } from "../../auth/src/index.js";
-import type { Container, SqlQuerySpec } from "@azure/cosmos";
+import type { Container } from "@azure/cosmos";
+import { createHash } from "node:crypto";
 import { getActionRequestsContainer } from "../../memory/src/cosmos-client.js";
 
 export type ActionState = "pending" | "approved" | "rejected" | "executing" | "completed" | "failed" | "expired";
@@ -11,6 +12,16 @@ export interface ActionRequest {
 }
 export interface CreateActionInput { affectedUserId: string; proposedAction: string; idempotencyKey: string }
 
+function actionId(context: RequestContext, input: CreateActionInput): string {
+  const scope = `${context.tenantId}:${input.affectedUserId}:${input.idempotencyKey}`;
+  return `action-${createHash("sha256").update(scope).digest("hex")}`;
+}
+
+function isConflict(error: unknown): boolean {
+  return typeof error === "object" && error !== null &&
+    ("code" in error && error.code === 409 || "statusCode" in error && error.statusCode === 409);
+}
+
 export class InMemoryActionStore {
   private readonly actions = new Map<string, ActionRequest>();
   private readonly idempotency = new Map<string, string>();
@@ -20,7 +31,7 @@ export class InMemoryActionStore {
     if (existingId) return this.actions.get(existingId)!;
     const now = new Date().toISOString();
     const action: ActionRequest = {
-      id: crypto.randomUUID(), tenantId: context.tenantId, initiatingUserId: context.userId,
+      id: actionId(context, input), tenantId: context.tenantId, initiatingUserId: context.userId,
       requestingAgentId, affectedUserId: input.affectedUserId, proposedAction: input.proposedAction,
       state: "pending", idempotencyKey: input.idempotencyKey, createdAt: now, updatedAt: now,
     };
@@ -64,27 +75,25 @@ export class CosmosActionStore {
     requestingAgentId: string,
     input: CreateActionInput,
   ): Promise<ActionRequest> {
-    const query: SqlQuerySpec = {
-      query: "SELECT TOP 1 * FROM c WHERE c.tenantId = @tenantId AND c.affectedUserId = @affectedUserId AND c.idempotencyKey = @idempotencyKey",
-      parameters: [
-        { name: "@tenantId", value: context.tenantId },
-        { name: "@affectedUserId", value: input.affectedUserId },
-        { name: "@idempotencyKey", value: input.idempotencyKey },
-      ],
-    };
-    const existing = await this.container.items.query<ActionRequest>(query, {
-      maxItemCount: 1,
-      partitionKey: [context.tenantId, input.affectedUserId],
-    }).fetchNext();
-    if (existing.resources[0]) return existing.resources[0];
     const now = new Date().toISOString();
     const action: ActionRequest = {
-      id: crypto.randomUUID(), tenantId: context.tenantId, initiatingUserId: context.userId,
+      id: actionId(context, input), tenantId: context.tenantId, initiatingUserId: context.userId,
       requestingAgentId, affectedUserId: input.affectedUserId, proposedAction: input.proposedAction,
       state: "pending", idempotencyKey: input.idempotencyKey, createdAt: now, updatedAt: now,
     };
-    const response = await this.container.items.create(action);
-    return response.resource ?? action;
+    try {
+      const response = await this.container.items.create(action, {
+        accessCondition: { type: "IfNoneMatch", condition: "*" },
+      });
+      return response.resource ?? action;
+    } catch (error) {
+      if (!isConflict(error)) throw error;
+      const existing = await this.container
+        .item(action.id, [context.tenantId, input.affectedUserId])
+        .read<ActionRequest>();
+      if (!existing.resource) throw new Error("Idempotent action write conflicted but no existing action was found.");
+      return existing.resource;
+    }
   }
   async decide(
     context: RequestContext,

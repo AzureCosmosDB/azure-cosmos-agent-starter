@@ -135,6 +135,7 @@ export async function runCli(args: string[]): Promise<number> {
       return 0;
     }
     const created = await composeProject(options);
+    const includeWeb = scenario.category !== "event" && options.includeWeb;
     if (options.initializeGit) await execFileAsync("git", ["init"], { cwd: created });
     if (options.json) {
       writeJson({
@@ -142,10 +143,10 @@ export async function runCli(args: string[]): Promise<number> {
         status: "created",
         destination: created,
         template: scenario.id,
-        nextSteps: nextSteps(created),
+        nextSteps: nextSteps(created, includeWeb),
       });
     } else {
-      printNextSteps(created);
+      printNextSteps(created, includeWeb);
     }
     return 0;
   } catch (error) {

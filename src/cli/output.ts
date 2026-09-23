@@ -46,21 +46,21 @@ Examples:
   create-cosmos-agent doctor ./my-agent
   create-cosmos-agent validate -C ./my-agent --json`;
 
-export function nextSteps(destination: string): string[] {
+export function nextSteps(destination: string, includeWeb = true): string[] {
   return [
     `cd "${destination}"`,
     "npm install",
     "npm run dev",
-    "Open http://localhost:5173",
+    ...(includeWeb ? ["Open http://localhost:5173"] : []),
     "azd up",
   ];
 }
 
-export function printNextSteps(destination: string): void {
+export function printNextSteps(destination: string, includeWeb = true): void {
   console.log(`\nCreated Cosmos Agent Starter in ${destination}`);
   console.log("\nNext steps:");
-  for (const step of nextSteps(destination).slice(0, -1)) console.log(`  ${step}`);
-  console.log(`\nAzure: ${nextSteps(destination).at(-1)}`);
+  for (const step of nextSteps(destination, includeWeb).slice(0, -1)) console.log(`  ${step}`);
+  console.log(`\nAzure: ${nextSteps(destination, includeWeb).at(-1)}`);
 }
 
 export function summarizeFindings(findings: DoctorFinding[]) {

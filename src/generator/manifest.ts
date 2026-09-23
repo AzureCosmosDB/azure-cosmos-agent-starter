@@ -2,7 +2,7 @@ export interface Scenario {
   id: string;
   name: string;
   description: string;
-  category: "foundation" | "chat" | "rag" | "support" | "multi-agent";
+  category: "foundation" | "chat" | "rag" | "support" | "multi-agent" | "event";
   base: string;
   features: string[];
   capabilities: string[];

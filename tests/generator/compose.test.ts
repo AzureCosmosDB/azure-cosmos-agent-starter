@@ -30,6 +30,7 @@ describe("scenario composition", () => {
       "agent-memory-ts",
       "chat-agent-ts",
       "customer-support-ts",
+      "event-agent-ts",
       "multi-agent-ts",
       "rag-agent-ts",
     ]);
@@ -64,6 +65,22 @@ describe("scenario composition", () => {
       expect(await readFile(join(path, "apps", "api", "src", "server.ts"), "utf8"))
         .toContain(`id: "${template}"`);
     }
+  });
+  it("composes an API-free event worker with retry-safe contracts", async () => {
+    const path = await destination();
+    await composeProject({ ...options(path), template: "event-agent-ts" });
+    const packageJson = JSON.parse(await readFile(join(path, "package.json"), "utf8")) as {
+      dependencies: Record<string, string>;
+      workspaces?: string[];
+    };
+    expect(packageJson.dependencies).toHaveProperty("@azure/service-bus");
+    expect(packageJson.workspaces).toBeUndefined();
+    expect(await readFile(join(path, "apps", "api", "src", "server.ts"), "utf8"))
+      .toContain("EVENT_TRANSPORT");
+    expect(await readFile(join(path, "packages", "agent", "src", "index.ts"), "utf8"))
+      .toContain("idempotencyKey");
+    expect(await readFile(join(path, "infra", "modules", "service-bus.bicep"), "utf8"))
+      .toContain("maxDeliveryCount: 10");
   });
   it("writes assisted provider, authentication, and storage selections", async () => {
     const path = await destination();

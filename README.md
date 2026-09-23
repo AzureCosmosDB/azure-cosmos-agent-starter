@@ -61,6 +61,7 @@ npx create-cosmos-agent@latest wizard my-agent
 | `chat-agent-ts` | Conversational assistants with memory and safe actions |
 | `rag-agent-ts` | Grounded document Q&A with vector retrieval and citations |
 | `customer-support-ts` | Customer context, ticket workflows, and approvals |
+| `event-agent-ts` | Service Bus-triggered agents with idempotency, retries, and dead-lettering |
 | `multi-agent-ts` | Planner, specialist, and reviewer workflows |
 | `agent-memory-ts` | Lightweight tenant-safe memory and approval primitives |
 
@@ -68,6 +69,31 @@ Choose a template directly:
 
 ```powershell
 npx create-cosmos-agent@latest knowledge-agent --template rag-agent-ts --yes
+```
+
+Create an event-driven worker:
+
+```powershell
+npx create-cosmos-agent@latest mail-agent --template event-agent-ts --yes
+```
+
+The event worker reads newline-delimited JSON from stdin locally and uses Azure Service Bus in
+production. Its validated event envelope carries the tenant and subject scope, while stable event
+IDs make memory and approval writes safe when Service Bus redelivers a message.
+
+```json
+{
+  "id": "event-00000001",
+  "type": "mail.received",
+  "source": "gmail",
+  "tenantId": "tenant-a",
+  "subjectId": "user-a",
+  "occurredAt": "2026-09-23T12:00:00.000Z",
+  "data": {
+    "objective": "Summarize the new message.",
+    "threadId": "mailbox"
+  }
+}
 ```
 
 ## Production choices

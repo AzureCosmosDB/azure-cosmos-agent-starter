@@ -134,7 +134,7 @@ export async function composeProject(options: CliOptions): Promise<string> {
     DEFAULT_AUTH_MODE: options.authMode,
     DEFAULT_STORAGE_BACKEND: options.storage,
   });
-  await configureWebOption(destination, options.includeWeb);
+  await configureWebOption(destination, scenario.category === "event" ? false : options.includeWeb);
   await validateGeneratedFiles(destination);
   return destination;
 }

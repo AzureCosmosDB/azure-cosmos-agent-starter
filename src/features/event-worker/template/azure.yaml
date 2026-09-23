@@ -1,0 +1,14 @@
+name: {{PROJECT_NAME}}
+metadata:
+  template: cosmos-agent-starter@0.3.0
+services:
+  worker:
+    project: .
+    host: containerapp
+    language: docker
+    docker:
+      path: ./Dockerfile
+      context: .
+infra:
+  provider: bicep
+  path: infra

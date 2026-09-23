@@ -1,4 +1,5 @@
 import type { Container, FeedOptions, QueryIterator, SqlQuerySpec } from "@azure/cosmos";
+import { createHash } from "node:crypto";
 import type { RequestContext } from "../../auth/src/index.js";
 import { MAX_PAGE_SIZE, type Page } from "../../shared/src/index.js";
 import { telemetry } from "../../telemetry/src/index.js";
@@ -33,7 +34,7 @@ interface Scoped { context: RequestContext }
 export interface RememberInput extends Scoped {
   threadId: string; agentId: string; type: MemoryType; content: string;
   source: AgentMemory["source"]; confidence: number; expiresAt?: string;
-  modelVersion?: string; promptVersion?: string;
+  modelVersion?: string; promptVersion?: string; idempotencyKey?: string;
 }
 export interface RecallInput extends Scoped { query: string; limit: number; threadId?: string }
 export interface ForgetInput extends Scoped { id: string }
@@ -81,21 +82,46 @@ function cosine(left: number[], right: number[]): number {
   return dot / ((Math.hypot(...left) || 1) * (Math.hypot(...right) || 1));
 }
 
+function memoryId(input: RememberInput): string {
+  if (!input.idempotencyKey) return crypto.randomUUID();
+  const scope = [
+    input.context.tenantId,
+    input.context.userId,
+    input.threadId,
+    input.idempotencyKey,
+  ].join(":");
+  return `memory-${createHash("sha256").update(scope).digest("hex")}`;
+}
+
+async function createMemory(
+  input: RememberInput,
+  embeddings: EmbeddingProvider,
+): Promise<AgentMemory> {
+  return {
+    id: memoryId(input), documentType: "memory", schemaVersion: 1,
+    tenantId: input.context.tenantId, userId: input.context.userId, threadId: input.threadId,
+    agentId: input.agentId, type: input.type, content: input.content,
+    embedding: await embeddings.embed(input.content), source: input.source,
+    confidence: input.confidence, createdAt: new Date().toISOString(),
+    correlationId: input.context.correlationId,
+    ...(input.expiresAt ? { expiresAt: input.expiresAt } : {}),
+    ...(input.modelVersion ? { modelVersion: input.modelVersion } : {}),
+    ...(input.promptVersion ? { promptVersion: input.promptVersion } : {}),
+  };
+}
+
+function isConflict(error: unknown): boolean {
+  return typeof error === "object" && error !== null &&
+    ("code" in error && error.code === 409 || "statusCode" in error && error.statusCode === 409);
+}
+
 export class InMemoryMemoryStore implements AgentMemoryStore {
   private readonly items = new Map<string, AgentMemory>();
   constructor(private readonly embeddings: EmbeddingProvider = new DeterministicEmbeddingProvider()) {}
   async remember(input: RememberInput): Promise<AgentMemory> {
-    const memory: AgentMemory = {
-      id: crypto.randomUUID(), documentType: "memory", schemaVersion: 1,
-      tenantId: input.context.tenantId, userId: input.context.userId, threadId: input.threadId,
-      agentId: input.agentId, type: input.type, content: input.content,
-      embedding: await this.embeddings.embed(input.content), source: input.source,
-      confidence: input.confidence, createdAt: new Date().toISOString(),
-      correlationId: input.context.correlationId,
-      ...(input.expiresAt ? { expiresAt: input.expiresAt } : {}),
-      ...(input.modelVersion ? { modelVersion: input.modelVersion } : {}),
-      ...(input.promptVersion ? { promptVersion: input.promptVersion } : {}),
-    };
+    const memory = await createMemory(input, this.embeddings);
+    const existing = this.items.get(memory.id);
+    if (existing) return existing;
     this.items.set(memory.id, memory);
     telemetry.cosmos("create", 1, 0, input.context.correlationId);
     return memory;
@@ -140,11 +166,22 @@ export class CosmosAgentMemoryStore implements AgentMemoryStore {
     private readonly embeddings: EmbeddingProvider = new DeterministicEmbeddingProvider(),
   ) {}
   async remember(input: RememberInput): Promise<AgentMemory> {
-    const memory = await new InMemoryMemoryStore(this.embeddings).remember(input);
+    const memory = await createMemory(input, this.embeddings);
     const started = performance.now();
-    const response = await this.container.items.create(memory);
-    telemetry.cosmos("create", response.requestCharge, performance.now() - started, input.context.correlationId);
-    return response.resource ?? memory;
+    try {
+      const response = await this.container.items.create(memory, input.idempotencyKey
+        ? { accessCondition: { type: "IfNoneMatch", condition: "*" } }
+        : undefined);
+      telemetry.cosmos("create", response.requestCharge, performance.now() - started, input.context.correlationId);
+      return response.resource ?? memory;
+    } catch (error) {
+      if (!input.idempotencyKey || !isConflict(error)) throw error;
+      const existing = await this.container
+        .item(memory.id, [memory.tenantId, memory.userId, memory.threadId])
+        .read<AgentMemory>();
+      if (!existing.resource) throw new Error("Idempotent memory write conflicted but no existing memory was found.");
+      return existing.resource;
+    }
   }
   async recall(input: RecallInput): Promise<MemoryResult[]> {
     const limit = Math.min(Math.max(Math.trunc(input.limit), 1), 20);
