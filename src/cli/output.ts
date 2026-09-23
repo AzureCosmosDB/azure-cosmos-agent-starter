@@ -15,7 +15,7 @@ Commands:
   validate [project]    Run generated-file, type, build, test, and Bicep checks
 
 Create options:
-  -t, --template <id>        Scenario template (default: agent-memory-ts)
+  -t, --template <id>        Scenario template (default: chat-agent-ts)
       --local <mode>         emulator | azure (default: emulator)
       --capacity <model>     serverless | autoscale (default: serverless)
       --web / --no-web       Include or exclude the example web interface
@@ -33,7 +33,7 @@ General options:
 
 Examples:
   create-cosmos-agent my-agent
-  create-cosmos-agent my-agent -t agent-memory-ts --capacity autoscale -y
+  create-cosmos-agent my-agent -t rag-agent-ts --capacity autoscale -y
   create-cosmos-agent create my-agent --local azure --no-web --no-git -y
   create-cosmos-agent my-agent --dry-run --json
   create-cosmos-agent doctor ./my-agent
@@ -43,8 +43,8 @@ export function nextSteps(destination: string): string[] {
   return [
     `cd "${destination}"`,
     "npm install",
-    "docker compose up -d",
     "npm run dev",
+    "Open http://localhost:5173",
     "azd up",
   ];
 }

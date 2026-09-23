@@ -1,6 +1,8 @@
 {
   "id": "agent-memory-ts",
   "name": "TypeScript agent with Cosmos DB memory",
+  "description": "A focused foundation for durable, tenant-safe agent memory and approval-gated actions.",
+  "category": "foundation",
   "base": "typescript",
   "features": [
     "cosmos-core",
@@ -12,5 +14,6 @@
     "telemetry",
     "container-apps",
     "github-copilot"
-  ]
+  ],
+  "capabilities": ["agent-memory", "approval-actions", "telemetry"]
 }

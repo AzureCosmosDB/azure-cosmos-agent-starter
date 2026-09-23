@@ -17,7 +17,7 @@ export async function assertSafeDestination(destination: string, confirmed: bool
     const entries = await readdir(destination);
     if (entries.length > 0 && !confirmed) {
       throw new Error(
-        `Destination "${destination}" is not empty. Re-run with --yes only if overwriting is intended.`,
+        `Destination "${destination}" is not empty. Re-run with --force only if overwriting is intended.`,
       );
     }
   } catch (error) {

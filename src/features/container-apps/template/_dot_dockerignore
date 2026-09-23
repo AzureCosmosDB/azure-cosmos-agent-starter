@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+.git
+.github
+**/node_modules
+**/dist
+coverage
+infra/*.json
+npm-debug.log*

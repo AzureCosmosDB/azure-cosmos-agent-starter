@@ -1,0 +1,20 @@
+{
+  "id": "customer-support-ts",
+  "name": "Customer support agent",
+  "description": "A support copilot with ticket workflows, customer context, approval-gated actions, and a responsive operations UI.",
+  "category": "support",
+  "base": "typescript",
+  "features": [
+    "cosmos-core",
+    "managed-identity",
+    "emulator",
+    "vector-search",
+    "agent-memory",
+    "approval-actions",
+    "telemetry",
+    "customer-platform",
+    "container-apps",
+    "github-copilot"
+  ],
+  "capabilities": ["chat", "customer-support", "tickets", "approval-actions", "agent-memory", "multi-provider-ai", "entra-id", "react-web"]
+}

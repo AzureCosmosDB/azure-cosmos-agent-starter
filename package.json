@@ -1,11 +1,15 @@
 {
   "name": "create-cosmos-agent",
-  "version": "0.1.1",
-  "description": "Composable scaffolding for tenant-safe Azure Cosmos DB agents",
+  "version": "0.2.0",
+  "description": "Scaffold customer-ready AI agents with Cosmos DB, React, Entra ID, RAG, and multi-provider models",
   "keywords": [
     "azure",
     "cosmosdb",
     "ai-agent",
+    "azure-openai",
+    "rag",
+    "react",
+    "multi-agent",
     "scaffolding",
     "cli",
     "typescript",

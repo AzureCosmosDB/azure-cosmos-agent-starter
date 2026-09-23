@@ -1,0 +1,43 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx apps/api/src/server.ts",
+    "dev:web": "npm run dev --workspace @cosmos-agent/web",
+    "build": "tsc -p tsconfig.json && npm run build --workspace @cosmos-agent/web",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck --workspace @cosmos-agent/web",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:security": "vitest run tests/security",
+    "test:cost": "vitest run tests/cost",
+    "test:integration": "vitest run tests/integration",
+    "seed": "tsx scripts/seed.ts",
+    "cleanup": "tsx scripts/cleanup.ts"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^4.4.1",
+    "@azure/identity": "^4.12.0",
+    "@opentelemetry/api": "^1.9.0",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "jose": "^6.1.0",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.18.3",
+    "concurrently": "^9.2.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^5.0.1"
+  }
+}

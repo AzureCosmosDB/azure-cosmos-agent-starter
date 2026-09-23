@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CliOptions } from "../cli/arguments.js";
@@ -49,6 +49,45 @@ export async function loadScenario(id: string): Promise<Scenario> {
   }
 }
 
+export async function listScenarios(): Promise<Scenario[]> {
+  const directory = join(sourceRoot, "scenarios");
+  const entries = (await readdir(directory))
+    .filter((entry) => entry.endsWith(".json"))
+    .sort();
+  return Promise.all(entries.map((entry) => loadScenario(entry.slice(0, -5))));
+}
+
+async function configureWebOption(destination: string, includeWeb: boolean): Promise<void> {
+  if (includeWeb) return;
+  await rm(join(destination, "apps", "web"), { recursive: true, force: true });
+  const packagePath = join(destination, "package.json");
+  const packageJson = JSON.parse(await readFile(packagePath, "utf8")) as {
+    workspaces?: string[];
+    scripts?: Record<string, string>;
+  };
+  if (!packageJson.workspaces?.includes("apps/web")) return;
+  packageJson.workspaces = packageJson.workspaces.filter((workspace) => workspace !== "apps/web");
+  if (packageJson.scripts) {
+    packageJson.scripts.dev = "npm run dev:api";
+    packageJson.scripts.build = "tsc -p tsconfig.json";
+    packageJson.scripts.typecheck = "tsc -p tsconfig.json --noEmit";
+  }
+  await writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+  const dockerfilePath = join(destination, "Dockerfile");
+  try {
+    const dockerfile = await readFile(dockerfilePath, "utf8");
+    await writeFile(
+      dockerfilePath,
+      dockerfile
+        .split(/\r?\n/)
+        .filter((line) => !line.includes("apps/web/package.json") && !line.includes("apps/web/dist"))
+        .join("\n"),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+}
+
 export async function composeProject(options: CliOptions): Promise<string> {
   if (!options.destination) throw new Error("A destination is required.");
   const destination = resolve(options.destination);
@@ -63,7 +102,7 @@ export async function composeProject(options: CliOptions): Promise<string> {
   const manifest: ProjectManifest = {
     schemaVersion: 1,
     language: "typescript",
-    scenario: "agent-memory",
+    scenario: scenario.id,
     hosting: "container-apps",
     cosmos: {
       api: "nosql",
@@ -71,24 +110,19 @@ export async function composeProject(options: CliOptions): Promise<string> {
       partitioning: "hierarchical",
       vectorSearch: true,
     },
-    authentication: { production: "managed-identity", local: options.localMode },
-    features: ["agent-memory", "approval-actions", "telemetry", "github-copilot"],
+    authentication: { production: "entra-id", local: options.localMode },
+    features: scenario.capabilities,
   };
   await writeFile(join(destination, "cosmos-project.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   await replaceTokens(destination, {
     PROJECT_NAME: destination.split(/[\\/]/).at(-1) ?? "cosmos-agent",
     CAPACITY: options.capacity,
+    SCENARIO_ID: scenario.id,
+    SCENARIO_NAME: scenario.name,
+    SCENARIO_DESCRIPTION: scenario.description,
+    SCENARIO_CATEGORY: scenario.category,
   });
-  if (!options.includeWeb) {
-    const web = join(destination, "apps", "web");
-    try {
-      if ((await stat(web)).isDirectory()) {
-        await writeFile(join(web, "README.md"), "Web interface was excluded during generation.\n");
-      }
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    }
-  }
+  await configureWebOption(destination, options.includeWeb);
   await validateGeneratedFiles(destination);
   return destination;
 }

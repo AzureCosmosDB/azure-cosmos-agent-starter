@@ -1,0 +1,20 @@
+{
+  "id": "rag-agent-ts",
+  "name": "Enterprise RAG agent",
+  "description": "A document-grounded assistant with ingestion, vector retrieval, citations, tenant isolation, and a React interface.",
+  "category": "rag",
+  "base": "typescript",
+  "features": [
+    "cosmos-core",
+    "managed-identity",
+    "emulator",
+    "vector-search",
+    "agent-memory",
+    "approval-actions",
+    "telemetry",
+    "customer-platform",
+    "container-apps",
+    "github-copilot"
+  ],
+  "capabilities": ["chat", "rag", "citations", "agent-memory", "multi-provider-ai", "entra-id", "react-web"]
+}

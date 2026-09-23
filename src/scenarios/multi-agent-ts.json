@@ -1,0 +1,20 @@
+{
+  "id": "multi-agent-ts",
+  "name": "Multi-agent orchestration starter",
+  "description": "A supervised planner, researcher, and action-agent workflow with traceable handoffs and shared memory.",
+  "category": "multi-agent",
+  "base": "typescript",
+  "features": [
+    "cosmos-core",
+    "managed-identity",
+    "emulator",
+    "vector-search",
+    "agent-memory",
+    "approval-actions",
+    "telemetry",
+    "customer-platform",
+    "container-apps",
+    "github-copilot"
+  ],
+  "capabilities": ["chat", "multi-agent", "handoff-traces", "approval-actions", "agent-memory", "multi-provider-ai", "entra-id", "react-web"]
+}

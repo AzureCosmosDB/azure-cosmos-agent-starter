@@ -62,7 +62,7 @@ export function parseArguments(rawArgs: string[]): CliOptions {
       : undefined;
   const commandOffset = explicitCommand ? 1 : 0;
   let command: CliCommand = explicitCommand ?? "create";
-  let template = "agent-memory-ts";
+  let template = "chat-agent-ts";
   let capacity: string = "serverless";
   let localMode: string = "emulator";
   let projectDirectory = ".";

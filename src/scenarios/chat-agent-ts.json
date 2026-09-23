@@ -1,0 +1,20 @@
+{
+  "id": "chat-agent-ts",
+  "name": "Customer-ready conversational agent",
+  "description": "A full-stack chat agent with durable memory, citations, safe actions, Entra ID, and a React interface.",
+  "category": "chat",
+  "base": "typescript",
+  "features": [
+    "cosmos-core",
+    "managed-identity",
+    "emulator",
+    "vector-search",
+    "agent-memory",
+    "approval-actions",
+    "telemetry",
+    "customer-platform",
+    "container-apps",
+    "github-copilot"
+  ],
+  "capabilities": ["chat", "agent-memory", "approval-actions", "multi-provider-ai", "entra-id", "react-web"]
+}

@@ -6,6 +6,24 @@ param location string = deployment().location
 param capacity string = '{{CAPACITY}}'
 param principalId string = ''
 param imageName string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+param entraTenantId string
+param entraAudience string
+param entraClientId string
+param entraScope string
+@allowed([
+  'azure-openai'
+  'openai'
+  'ollama'
+])
+param aiProvider string = 'azure-openai'
+param azureOpenAIEndpoint string = ''
+param azureOpenAIChatDeployment string = ''
+@secure()
+param openAIApiKey string = ''
+param openAIModel string = 'gpt-4.1-mini'
+param openAIBaseUrl string = 'https://api.openai.com/v1'
+param ollamaBaseUrl string = 'http://localhost:11434'
+param ollamaModel string = 'llama3.2'
 
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var resourceGroupName = 'rg-${environmentName}'
@@ -46,6 +64,18 @@ module app 'modules/container-apps.bicep' = {
     identityId: identity.outputs.id
     cosmosEndpoint: cosmos.outputs.endpoint
     appInsightsConnectionString: monitoring.outputs.connectionString
+    entraTenantId: entraTenantId
+    entraAudience: entraAudience
+    entraClientId: entraClientId
+    entraScope: entraScope
+    aiProvider: aiProvider
+    azureOpenAIEndpoint: azureOpenAIEndpoint
+    azureOpenAIChatDeployment: azureOpenAIChatDeployment
+    openAIApiKey: openAIApiKey
+    openAIModel: openAIModel
+    openAIBaseUrl: openAIBaseUrl
+    ollamaBaseUrl: ollamaBaseUrl
+    ollamaModel: ollamaModel
   }
 }
 

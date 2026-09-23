@@ -1,14 +1,17 @@
 export interface Scenario {
   id: string;
   name: string;
+  description: string;
+  category: "foundation" | "chat" | "rag" | "support" | "multi-agent";
   base: string;
   features: string[];
+  capabilities: string[];
 }
 
 export interface ProjectManifest {
   schemaVersion: 1;
   language: "typescript";
-  scenario: "agent-memory";
+  scenario: string;
   hosting: "container-apps";
   cosmos: {
     api: "nosql";
@@ -17,7 +20,7 @@ export interface ProjectManifest {
     vectorSearch: true;
   };
   authentication: {
-    production: "managed-identity";
+    production: "entra-id";
     local: "emulator" | "azure";
   };
   features: string[];

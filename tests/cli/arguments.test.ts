@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { parseArguments } from "../../src/cli/arguments.js";
 
 describe("CLI arguments", () => {
+  it("defaults to the customer-ready chat template", () => {
+    expect(parseArguments(["demo"]).template).toBe("chat-agent-ts");
+  });
+
   it("selects noninteractive options", () => {
     expect(
       parseArguments([

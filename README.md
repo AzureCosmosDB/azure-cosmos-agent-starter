@@ -1,151 +1,222 @@
-# Cosmos Agent Starter
+# Create Cosmos Agent
 
-`create-cosmos-agent` is an open-source, composable CLI for scaffolding secure Azure Cosmos DB
-applications and AI agents. The first scenario is a strict TypeScript agent with durable,
-tenant-safe memory, bounded vector retrieval, provenance citations, user deletion, diagnostics,
-and an approval-gated consequential action.
+`create-cosmos-agent` is a production-oriented CLI for generating customer-facing AI applications
+on Azure Cosmos DB. It creates a full TypeScript API, React workspace, secure identity boundary,
+multi-provider model layer, durable memory, vector retrieval, approval workflows, telemetry, tests,
+containers, and Azure infrastructure.
 
-## Requirements
+Start locally without Azure, Docker, a model key, or a database. Move to Microsoft Entra ID,
+Azure OpenAI, and Cosmos DB without replacing the application contracts.
 
-- Node.js 20+
-- Docker for the local Cosmos DB emulator
-- Azure Developer CLI and Azure CLI for deployment
+## Customer scenarios
 
-## Quickstart: run locally in five minutes
+| Template | Best for | Included experience |
+|---|---|---|
+| `chat-agent-ts` | Conversational assistants and copilots | Chat, durable memory, citations, safe actions, responsive React UI |
+| `rag-agent-ts` | Enterprise knowledge and document Q&A | Document ingestion, vector retrieval, grounded answers, source citations |
+| `customer-support-ts` | Service desks and customer operations | Ticket workflows, customer context, approval-gated actions |
+| `multi-agent-ts` | Complex supervised workflows | Planner, specialist, reviewer, traceable handoffs, shared memory |
+| `agent-memory-ts` | Lightweight foundations and custom integrations | Tenant-safe memory and approval primitives without the full customer platform |
 
-This quickstart uses the generated in-memory adapter first: no Azure subscription, Cosmos DB
-account, Docker, or credentials are required.
+The four customer templates use one composable platform layer, so provider, authentication,
+deployment, and security behavior remain consistent.
 
-### 1. Generate an agent project
+## Quickstart
 
-```powershell
-npx create-cosmos-agent my-cosmos-agent `
-  --template agent-memory-ts `
-  --yes `
-  --no-git
-```
-
-If a corporate npm proxy has not mirrored the package yet, download the release tarball from
-GitHub and ask `npx` to use that local package:
+### Generate the default chat agent
 
 ```powershell
-$package = Join-Path $env:TEMP "create-cosmos-agent-0.1.1.tgz"
-
-Invoke-WebRequest `
-  -Uri "https://github.com/sajeetharan/cosmos-agent-starter/releases/download/v0.1.1/create-cosmos-agent-0.1.1.tgz" `
-  -OutFile $package
-
-npx --yes --package $package create-cosmos-agent my-cosmos-agent `
-  --template agent-memory-ts `
-  --yes `
-  --no-git
-```
-
-### 2. Install and test the generated project
-
-```powershell
-cd my-cosmos-agent
+npx create-cosmos-agent my-customer-agent --yes --no-git
+cd my-customer-agent
 npm install
-npm run typecheck
-npm test
-```
-
-### 3. Start the API without a database
-
-```powershell
 npm run dev
 ```
 
-Development defaults to the in-memory backend. The API listens on `http://localhost:3000`; keep
-it running and open another terminal.
+Open `http://localhost:5173`.
 
-### 4. Verify health
+Local development defaults to:
+
+- `AI_PROVIDER=mock` for deterministic responses;
+- `MEMORY_BACKEND=in-memory`;
+- `AUTH_MODE=local`.
+
+No cloud credentials are needed. The mock provider and local authentication adapter are explicitly
+blocked in production.
+
+Choose another scenario:
 
 ```powershell
-Invoke-RestMethod http://localhost:3000/health
+npx create-cosmos-agent knowledge-agent --template rag-agent-ts --yes
+npx create-cosmos-agent support-agent --template customer-support-ts --yes
+npx create-cosmos-agent agent-team --template multi-agent-ts --yes
 ```
 
-Expected response:
+List every template:
 
-```json
-{
-  "status": "ok"
-}
+```powershell
+npx create-cosmos-agent list
 ```
 
-### 5. Store and recall a memory
+## Test the generated application
+
+```powershell
+npm run typecheck
+npm test
+npm run build
+```
+
+Test the API while `npm run dev` is running:
 
 ```powershell
 $headers = @{
-  "x-tenant-id"      = "tenant-a"
-  "x-user-id"        = "user-a"
-  "x-correlation-id" = "quickstart-001"
+  "x-tenant-id" = "tenant-demo"
+  "x-user-id"   = "user-demo"
 }
 
-$memory = @{
-  type          = "preference"
-  content       = "I prefer concise technical answers"
-  threadId      = "thread-001"
-  interactionId = "interaction-001"
-} | ConvertTo-Json
+Invoke-RestMethod http://localhost:3000/health
 
 Invoke-RestMethod `
   -Method Post `
-  -Uri http://localhost:3000/api/memories `
+  -Uri http://localhost:3000/api/chat `
   -Headers $headers `
   -ContentType "application/json" `
-  -Body $memory
-
-$recall = @{
-  query = "How does the user prefer answers?"
-  limit = 5
-} | ConvertTo-Json
-
-Invoke-RestMethod `
-  -Method Post `
-  -Uri http://localhost:3000/api/memories/recall `
-  -Headers $headers `
-  -ContentType "application/json" `
-  -Body $recall
+  -Body (@{
+    message = "Help me understand my options"
+    threadId = "demo-thread"
+    useKnowledge = $false
+  } | ConvertTo-Json)
 ```
 
-The recall response includes the scoped memory, similarity score, memory ID, and source
-interaction citation.
+## Features
 
-### 6. Inspect and validate
+### AI providers
+
+- Azure OpenAI with `DefaultAzureCredential` or an explicit development key
+- OpenAI-compatible chat completions
+- Ollama for local models
+- Deterministic local provider for tests and demos
+- Explicit provider errors without silent fallback
+
+### Identity and tenant isolation
+
+- Microsoft Entra ID JWT validation in production
+- Signature, issuer, audience, tenant, expiry, and user claim checks
+- Local identity adapter restricted to non-production environments
+- Tenant and user context derived at the API boundary, never from agent tool arguments
+
+### Durable agent data
+
+- Hierarchical partition key: `/tenantId`, `/userId`, `/threadId`
+- User memories with provenance, confidence, model version, and deletion
+- Parameterized, bounded vector queries
+- Document chunks with grounded citations
+- Support tickets and agent workflow state
+- RU and latency telemetry without prompt-body logging
+
+### Safe automation
+
+- Pending, approved, rejected, executing, completed, failed, and expired action states
+- Only the affected user can approve
+- Agents cannot self-approve
+- Idempotency keys
+- ETag optimistic concurrency
+- Execution blocked without recorded approval evidence
+
+### Customer interface
+
+- React and Vite
+- Chat with citation disclosure
+- Knowledge ingestion
+- Support workspace
+- Multi-agent run traces
+- Runtime diagnostics
+- Responsive layout, keyboard navigation, visible focus, semantic controls, and reduced-motion support
+
+### Azure delivery
+
+- Azure Developer CLI
+- Bicep
+- Azure Container Apps
+- User-assigned Managed Identity
+- Azure Cosmos DB for NoSQL
+- Application Insights
+- Docker and local Cosmos DB emulator
+
+## Provider configuration
+
+Copy `.env.example` to `.env`, then choose one provider:
+
+```dotenv
+# Azure OpenAI
+AI_PROVIDER=azure-openai
+AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com
+AZURE_OPENAI_CHAT_DEPLOYMENT=<deployment>
+
+# OpenAI
+AI_PROVIDER=openai
+OPENAI_API_KEY=<key>
+OPENAI_MODEL=gpt-4.1-mini
+
+# Ollama
+AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+```
+
+Do not commit `.env` or provider credentials.
+
+## Microsoft Entra ID
+
+Local development uses trusted development headers. Production defaults to Entra ID:
+
+```dotenv
+AUTH_MODE=entra
+AUTH_ENTRA_TENANT_ID=<directory-tenant-id>
+AUTH_ENTRA_AUDIENCE=<API-application-ID-or-URI>
+AUTH_ENTRA_CLIENT_ID=<SPA-application-client-id>
+AUTH_ENTRA_SCOPE=<exposed-API-scope>
+```
+
+The React application retrieves this non-secret configuration from `/api/config`, signs users in
+with MSAL, and sends access tokens to the API.
+
+## Cosmos DB
+
+Start with in-memory storage. To use the local emulator:
 
 ```powershell
-Invoke-RestMethod `
-  -Uri http://localhost:3000/api/diagnostics `
-  -Headers $headers
-
-npx create-cosmos-agent doctor .
-npx create-cosmos-agent validate .
+docker compose up -d
 ```
 
-### Move to Cosmos DB or Azure
+Then configure `.env`:
 
-After the in-memory path works:
+```dotenv
+MEMORY_BACKEND=cosmos
+COSMOS_ENDPOINT=https://localhost:8081
+COSMOS_DATABASE=cosmos-agent
+COSMOS_EMULATOR=true
+COSMOS_EMULATOR_KEY=<emulator-key>
+```
 
-1. Start Docker Desktop's Linux engine.
-2. Configure `.env` from `.env.example` with the emulator endpoint and emulator key.
-3. Run `docker compose up -d`.
-4. Set `MEMORY_BACKEND=cosmos`.
-5. Run the opt-in integration suite with `RUN_COSMOS_INTEGRATION=true`.
+Azure uses `DefaultAzureCredential` and Cosmos DB data-plane RBAC instead of a production account
+key.
 
-For Azure, sign in with Azure Developer CLI and deploy:
+## Deploy to Azure
 
 ```powershell
 azd auth login
+azd env set ENTRA_TENANT_ID "<tenant-id>"
+azd env set ENTRA_AUDIENCE "<api-audience>"
+azd env set ENTRA_CLIENT_ID "<spa-client-id>"
+azd env set ENTRA_SCOPE "<api-scope>"
+azd env set AI_PROVIDER "azure-openai"
+azd env set AZURE_OPENAI_ENDPOINT "<endpoint>"
+azd env set AZURE_OPENAI_CHAT_DEPLOYMENT "<deployment>"
 azd up
 ```
 
-Azure deployment can create billable resources. Production uses Managed Identity and Cosmos DB
-data-plane RBAC; it does not generate a production account key.
-
-Without `--yes`, the interactive flow asks for the destination, local mode, Azure capacity,
-example web interface, and Git initialization. `--yes` accepts prompt defaults but **does not
-permit overwriting files**; use `--force` separately and deliberately for a non-empty destination.
+Azure deployment can create billable resources. Grant the generated runtime identity the minimum
+required role on the selected Azure OpenAI resource.
 
 ## CLI reference
 
@@ -160,98 +231,59 @@ create-cosmos-agent validate [project] [--json]
 
 | Command | Purpose |
 |---|---|
-| `create [destination]` | Create a project. `create` is optional and is the default command. |
-| `list` | List available scenario templates. Alias: `--list`, `-l`. |
-| `doctor [project]` | Statically inspect a generated project and report evidence and remediation. |
-| `validate [project]` | Run generated-file checks, type checking, build, unit/security/cost tests, and Bicep compilation when available. |
+| `create [destination]` | Create a project; this is the default command |
+| `list` | List scenario templates |
+| `doctor [project]` | Inspect security and configuration patterns |
+| `validate [project]` | Run generated-file, type, build, test, and Bicep checks |
 
-### Creation options
+### Create options
 
 | Option | Description | Default |
 |---|---|---|
-| `-t, --template <id>` | Scenario template | `agent-memory-ts` |
-| `--local <mode>` | Local authentication/runtime mode: `emulator` or `azure` | `emulator` |
-| `--capacity <model>` | Azure Cosmos DB capacity: `serverless` or `autoscale` | `serverless` |
-| `--web`, `--no-web` | Include or exclude the small example web interface | Included |
-| `--git`, `--no-git` | Initialize or skip a Git repository in the generated project | Initialize |
-| `-y, --yes` | Accept interactive defaults; required for ordinary JSON creation | Off |
-| `-f, --force` | Allow generated files to overwrite matching paths in a non-empty destination | Off |
-| `--dry-run` | Resolve and print the generation plan without writing files | Off |
-
-`--force` overlays generated files; it does not delete unrelated files already in the destination.
-`--force` and `--dry-run` cannot be combined.
+| `-t, --template <id>` | Scenario template | `chat-agent-ts` |
+| `--local <mode>` | `emulator` or `azure` | `emulator` |
+| `--capacity <model>` | `serverless` or `autoscale` | `serverless` |
+| `--web`, `--no-web` | Include or exclude the React application | Included |
+| `--git`, `--no-git` | Initialize or skip Git | Initialize |
+| `-y, --yes` | Accept prompt defaults; never permits overwriting | Off |
+| `-f, --force` | Allow overlays into a non-empty destination | Off |
+| `--dry-run` | Print the resolved plan without writing | Off |
 
 ### General options
 
 | Option | Description |
 |---|---|
-| `-C, --project <path>` | Target project for `doctor` or `validate` |
-| `--json` | Emit stable machine-readable output for automation |
-| `-h, --help` | Show complete command help |
-| `-v, --version` | Show the CLI version |
+| `-C, --project <path>` | Project targeted by `doctor` or `validate` |
+| `--json` | Machine-readable output |
+| `-h, --help` | Help |
+| `-v, --version` | Version |
 
-Long value options support both forms, such as `--capacity autoscale` and
-`--capacity=autoscale`. Unknown flags, missing values, invalid enums, conflicting modes, and
-multiple destinations return a nonzero exit code with a specific error.
-
-### Examples
-
-Interactive creation:
+Examples:
 
 ```powershell
-npx create-cosmos-agent my-agent
-```
-
-Explicit production-oriented choices:
-
-```powershell
-npx create-cosmos-agent create my-agent `
-  --template agent-memory-ts `
-  --local azure `
-  --capacity autoscale `
-  --no-web `
-  --yes
-```
-
-Preview a plan without writing:
-
-```powershell
-npx create-cosmos-agent my-agent --capacity autoscale --dry-run
-npx create-cosmos-agent my-agent --capacity autoscale --dry-run --json
-```
-
-Generate from automation and parse the result:
-
-```powershell
-npx create-cosmos-agent my-agent --yes --no-git --json
-```
-
-Inspect or validate a project without changing the current directory:
-
-```powershell
+npx create-cosmos-agent my-agent --dry-run --json
 npx create-cosmos-agent doctor .\my-agent
-npx create-cosmos-agent doctor -C .\my-agent --json
-npx create-cosmos-agent validate .\my-agent
 npx create-cosmos-agent validate -C .\my-agent --json
 ```
 
-List templates or inspect CLI metadata:
+`--force` and `--dry-run` cannot be combined. JSON creation requires a destination and either
+`--yes` or `--dry-run`.
+
+## Corporate npm proxy fallback
+
+If a corporate npm proxy has not mirrored the current release, download the matching `.tgz` asset
+from the GitHub release and pass the local file to `npx`:
 
 ```powershell
-npx create-cosmos-agent list
-npx create-cosmos-agent --list --json
-npx create-cosmos-agent --help
-npx create-cosmos-agent --version
+$version = "0.2.0"
+$package = Join-Path $env:TEMP "create-cosmos-agent-$version.tgz"
+
+Invoke-WebRequest `
+  -Uri "https://github.com/sajeetharan/cosmos-agent-starter/releases/download/v$version/create-cosmos-agent-$version.tgz" `
+  -OutFile $package
+
+npx --yes --package $package create-cosmos-agent my-agent --yes
 ```
-
-### Exit codes and JSON
-
-- Exit code `0`: the command completed successfully.
-- Exit code `1`: parsing, generation, doctor, or validation failed.
-- `doctor` returns `1` when it finds an error-level issue; warnings alone do not fail it.
-- JSON errors use `{ "status": "error", "message": "..." }` on standard error.
-- JSON creation requires a destination and either `--yes` or `--dry-run`, ensuring it never
-  opens interactive prompts in automation.
 
 ## Develop the generator
 
@@ -259,50 +291,18 @@ npx create-cosmos-agent --version
 npm install
 npm run validate
 npm run dev -- --list
-npm run dev -- my-agent --template agent-memory-ts --yes
+npm run dev -- my-agent --template rag-agent-ts --yes
 ```
 
-`add` remains a future capability.
+The generator composes:
 
-## Architecture
+1. the TypeScript base in `src/bases/typescript/template`;
+2. ordered overlays in `src/features/*/template`;
+3. declarative scenarios in `src/scenarios/*.json`.
 
-The CLI composes a base from `src/bases/typescript/template`, ordered feature packs from
-`src/features/*/template`, and `src/scenarios/agent-memory-ts.json`. Later feature packs can
-overlay files without duplicating a complete template. The project manifest records the selected
-capacity and local authentication mode.
+This keeps provider, identity, persistence, UI, and infrastructure behavior reusable across
+customer templates.
 
-The generated app uses:
+## License
 
-- a singleton Cosmos client with `DefaultAzureCredential` in Azure;
-- `/tenantId`, `/userId`, `/threadId` hierarchical partition keys;
-- an immutable vector embedding policy and bounded, parameterized `VectorDistance` queries;
-- application-owned memory and agent boundaries;
-- OpenTelemetry API instrumentation and request-charge capture;
-- separate identities for deployment and runtime, with Cosmos data-plane RBAC.
-
-## Local and Azure paths
-
-```powershell
-cd my-agent
-npm install
-Copy-Item .env.example .env
-npm run dev
-```
-
-This starts with in-memory storage. To use Cosmos DB, set `MEMORY_BACKEND=cosmos` in `.env` and
-configure either the emulator credentials or an Azure endpoint. Start the emulator with
-`docker compose up -d` when using the local Cosmos path.
-
-The emulator vNext image is preview and may not support every Azure vector/HPK feature. The
-in-memory security suite runs everywhere; set `RUN_COSMOS_INTEGRATION=true` only against a prepared
-container. Deploy with `azd up`. No production account key is generated.
-
-## Preview boundaries and troubleshooting
-
-Microsoft Agent Framework and the Cosmos DB Agent Memory Toolkit do not currently provide a stable
-TypeScript integration used by this sample. Their future integration belongs behind the generated
-application-owned interfaces. The local Linux Cosmos emulator image is preview. If vector creation
-fails, verify `EnableNoSQLVectorSearch`, use a new container, and validate hierarchical vector-search
-support for the target account. Run `doctor` for static evidence and remediation.
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) and [SECURITY.md](./SECURITY.md).
+MIT

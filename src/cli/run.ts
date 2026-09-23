@@ -12,7 +12,7 @@ import {
   printNextSteps,
   summarizeFindings,
 } from "./output.js";
-import { composeProject, loadScenario } from "../generator/compose.js";
+import { composeProject, listScenarios, loadScenario } from "../generator/compose.js";
 import { runDoctor } from "../generator/doctor.js";
 import { validateProject } from "../generator/validate.js";
 
@@ -44,9 +44,13 @@ export async function runCli(args: string[]): Promise<number> {
       return 0;
     }
     if (options.command === "list") {
-      const scenario = await loadScenario("agent-memory-ts");
-      if (options.json) writeJson({ templates: [scenario] });
-      else console.log(`${scenario.id}\t${scenario.name}`);
+      const scenarios = await listScenarios();
+      if (options.json) writeJson({ templates: scenarios });
+      else {
+        for (const scenario of scenarios) {
+          console.log(`${scenario.id}\t${scenario.name}\t${scenario.description}`);
+        }
+      }
       return 0;
     }
     if (options.command === "doctor") {
