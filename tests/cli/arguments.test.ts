@@ -71,6 +71,40 @@ describe("CLI arguments", () => {
     });
   });
 
+  it("supports Neon-style bootstrap setup and explicit deployment", () => {
+    expect(parseArguments([
+      "bootstrap",
+      "demo",
+      "--template",
+      "rag-agent-ts",
+      "--environment",
+      "demo-dev",
+      "--deploy",
+      "--yes",
+    ])).toMatchObject({
+      command: "bootstrap",
+      destination: "demo",
+      template: "rag-agent-ts",
+      environmentName: "demo-dev",
+      installDependencies: true,
+      linkProject: true,
+      deploy: true,
+    });
+    expect(parseArguments([
+      "bootstrap",
+      "demo",
+      "--no-install",
+      "--no-link",
+      "--no-git",
+      "--yes",
+    ])).toMatchObject({
+      installDependencies: false,
+      linkProject: false,
+      initializeGit: false,
+      deploy: false,
+    });
+  });
+
   it("rejects invalid provider, authentication, and storage options", () => {
     expect(() => parseArguments(["demo", "--provider", "invalid"])).toThrow(/provider/i);
     expect(() => parseArguments(["demo", "--auth", "invalid"])).toThrow(/authentication/i);
@@ -87,6 +121,11 @@ describe("CLI arguments", () => {
       /scaffolding options/i,
     );
     expect(() => parseArguments(["list", "-C", "./sample"])).toThrow(/project/i);
+    expect(() => parseArguments(["demo", "--deploy"])).toThrow(/only valid with bootstrap/i);
+    expect(() => parseArguments(["bootstrap", "demo", "--deploy", "--no-link"]))
+      .toThrow(/cannot be combined/i);
+    expect(() => parseArguments(["bootstrap", "demo", "--environment", "dev", "--no-link"]))
+      .toThrow(/cannot be combined/i);
   });
 
   it("requires JSON creation to be noninteractive", () => {

@@ -21,6 +21,7 @@ import {
 import { composeProject, listScenarios, loadScenario } from "../generator/compose.js";
 import { runDoctor } from "../generator/doctor.js";
 import { validateProject } from "../generator/validate.js";
+import { bootstrapProject } from "../generator/bootstrap.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -104,7 +105,7 @@ export async function runCli(args: string[]): Promise<number> {
       return exitCode;
     }
     if (options.json && !options.destination) {
-      throw new Error("JSON creation requires a destination.");
+      throw new Error("JSON scaffolding requires a destination.");
     }
     if (!options.dryRun) options = await completeInteractiveOptions(options);
     if (!options.destination) throw new Error("A project destination is required.");
@@ -112,7 +113,7 @@ export async function runCli(args: string[]): Promise<number> {
     const scenario = await loadScenario(options.template);
     if (options.dryRun) {
       const plan = {
-        command: "create",
+        command: options.command,
         status: "planned",
         destination,
         template: { id: scenario.id, name: scenario.name },
@@ -124,6 +125,10 @@ export async function runCli(args: string[]): Promise<number> {
           storage: options.storage,
           includeWeb: options.includeWeb,
           initializeGit: options.initializeGit,
+          installDependencies: options.installDependencies,
+          linkProject: options.linkProject,
+          deploy: options.deploy,
+          ...(options.environmentName ? { environmentName: options.environmentName } : {}),
           force: options.force,
         },
       };
@@ -136,6 +141,42 @@ export async function runCli(args: string[]): Promise<number> {
     }
     const created = await composeProject(options);
     const includeWeb = scenario.category !== "event" && options.includeWeb;
+    if (options.command === "bootstrap") {
+      const result = await bootstrapProject({
+        destination: created,
+        template: scenario.id,
+        installDependencies: options.installDependencies,
+        initializeGit: options.initializeGit,
+        linkProject: options.linkProject,
+        deploy: options.deploy,
+        ...(options.environmentName ? { environmentName: options.environmentName } : {}),
+        silent: options.json,
+      });
+      if (options.json) {
+        writeJson({
+          command: "bootstrap",
+          status: result.deployed ? "deployed" : "bootstrapped",
+          ...result,
+          nextSteps: [
+            "npm run dev",
+            ...(!result.deployed && result.environmentName
+              ? [`azd up --environment ${result.environmentName}`]
+              : []),
+          ],
+        });
+      } else {
+        console.log(`\nBootstrapped Cosmos Agent in ${created}`);
+        console.log(`  Dependencies: ${result.dependenciesInstalled ? "installed" : "skipped"}`);
+        console.log(`  Git: ${result.gitInitialized ? "initialized" : "skipped"}`);
+        console.log(`  Project context: ${result.linked ? `linked to ${result.environmentName}` : "skipped"}`);
+        console.log(`  Azure deployment: ${result.deployed ? "completed" : "not requested"}`);
+        console.log("\nNext step: npm run dev");
+        if (!result.deployed && result.environmentName) {
+          console.log(`Azure: azd up --environment ${result.environmentName}`);
+        }
+      }
+      return 0;
+    }
     if (options.initializeGit) await execFileAsync("git", ["init"], { cwd: created });
     if (options.json) {
       writeJson({
