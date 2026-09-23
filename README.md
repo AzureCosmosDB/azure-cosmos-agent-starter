@@ -8,6 +8,12 @@ containers, and Azure infrastructure.
 Start locally without Azure, Docker, a model key, or a database. Move to Microsoft Entra ID,
 Azure OpenAI, and Cosmos DB without replacing the application contracts.
 
+## Overview video
+
+[Watch the create-cosmos-agent overview](docs/media/create-cosmos-agent-overview.mp4) to see how
+the guided CLI turns agent architecture choices into a locally runnable application with a
+production path to Azure Cosmos DB.
+
 ## Customer scenarios
 
 | Template | Best for | Included experience |
