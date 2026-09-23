@@ -3,7 +3,14 @@ export type LocalMode = "emulator" | "azure";
 export type AIProvider = "mock" | "azure-openai" | "openai" | "ollama";
 export type AuthMode = "local" | "entra";
 export type StorageBackend = "in-memory" | "cosmos";
-export type CliCommand = "create" | "list" | "doctor" | "validate" | "help" | "version";
+export type CliCommand =
+  | "create"
+  | "bootstrap"
+  | "list"
+  | "doctor"
+  | "validate"
+  | "help"
+  | "version";
 
 export interface CliOptions {
   command: CliCommand;
@@ -17,13 +24,17 @@ export interface CliOptions {
   storage: StorageBackend;
   includeWeb: boolean;
   initializeGit: boolean;
+  installDependencies: boolean;
+  linkProject: boolean;
+  deploy: boolean;
+  environmentName?: string;
   yes: boolean;
   force: boolean;
   dryRun: boolean;
   json: boolean;
 }
 
-const valueFlags = new Map<string, "template" | "capacity" | "localMode" | "projectDirectory" | "provider" | "authMode" | "storage">([
+const valueFlags = new Map<string, "template" | "capacity" | "localMode" | "projectDirectory" | "provider" | "authMode" | "storage" | "environmentName">([
   ["--template", "template"],
   ["-t", "template"],
   ["--capacity", "capacity"],
@@ -33,6 +44,8 @@ const valueFlags = new Map<string, "template" | "capacity" | "localMode" | "proj
   ["--storage", "storage"],
   ["--project", "projectDirectory"],
   ["-C", "projectDirectory"],
+  ["--environment", "environmentName"],
+  ["-e", "environmentName"],
 ] as const);
 
 const booleanFlags = new Set([
@@ -48,6 +61,11 @@ const booleanFlags = new Set([
   "--no-web",
   "--git",
   "--no-git",
+  "--install",
+  "--no-install",
+  "--link",
+  "--no-link",
+  "--deploy",
   "--help",
   "-h",
   "--version",
@@ -69,7 +87,8 @@ export function parseArguments(rawArgs: string[]): CliOptions {
   const explicitCommand =
     wizard
       ? "create"
-      : first === "create" || first === "doctor" || first === "validate" || first === "list"
+      : first === "create" || first === "bootstrap" || first === "doctor" ||
+          first === "validate" || first === "list"
       ? first
       : undefined;
   const commandOffset = explicitCommand ? 1 : 0;
@@ -84,6 +103,10 @@ export function parseArguments(rawArgs: string[]): CliOptions {
   let destination: string | undefined;
   let includeWeb = true;
   let initializeGit = true;
+  let installDependencies = explicitCommand === "bootstrap";
+  let linkProject = explicitCommand === "bootstrap";
+  let deploy = false;
+  let environmentName: string | undefined;
   let yes = false;
   let force = false;
   let dryRun = false;
@@ -104,6 +127,7 @@ export function parseArguments(rawArgs: string[]): CliOptions {
       if (valueKey === "authMode") authMode = value;
       if (valueKey === "storage") storage = value;
       if (valueKey === "projectDirectory") projectDirectory = value;
+      if (valueKey === "environmentName") environmentName = value;
       index += 1;
       continue;
     }
@@ -149,6 +173,21 @@ export function parseArguments(rawArgs: string[]): CliOptions {
       case "--no-git":
         initializeGit = false;
         break;
+      case "--install":
+        installDependencies = true;
+        break;
+      case "--no-install":
+        installDependencies = false;
+        break;
+      case "--link":
+        linkProject = true;
+        break;
+      case "--no-link":
+        linkProject = false;
+        break;
+      case "--deploy":
+        deploy = true;
+        break;
       default:
         if (argument.startsWith("-")) break;
         if (explicitCommand === "doctor" || explicitCommand === "validate") {
@@ -156,7 +195,7 @@ export function parseArguments(rawArgs: string[]): CliOptions {
             throw new Error(`Only one project directory can be specified for ${explicitCommand}.`);
           }
           projectDirectory = argument;
-        } else if (command === "create") {
+        } else if (command === "create" || command === "bootstrap") {
           if (destination) throw new Error("Only one destination can be specified.");
           destination = argument;
         } else {
@@ -185,10 +224,11 @@ export function parseArguments(rawArgs: string[]): CliOptions {
   if (force && dryRun) {
     throw new Error("--force and --dry-run cannot be used together.");
   }
-  if (command !== "create" && (force || dryRun)) {
-    throw new Error(`--force and --dry-run are only valid with the create command.`);
+  const scaffoldingCommand = command === "create" || command === "bootstrap";
+  if (!scaffoldingCommand && (force || dryRun)) {
+    throw new Error("--force and --dry-run are only valid with create or bootstrap.");
   }
-  const createOnlyFlags = [
+  const scaffoldingFlags = [
     "--template",
     "-t",
     "--capacity",
@@ -204,18 +244,36 @@ export function parseArguments(rawArgs: string[]): CliOptions {
     "-y",
   ];
   if (
-    command !== "create" &&
+    !scaffoldingCommand &&
     command !== "help" &&
     command !== "version" &&
-    createOnlyFlags.some((flag) => args.includes(flag))
+    scaffoldingFlags.some((flag) => args.includes(flag))
   ) {
-    throw new Error(`Scaffolding options are only valid with the create command.`);
+    throw new Error("Scaffolding options are only valid with create or bootstrap.");
+  }
+  const bootstrapOnlyFlags = [
+    "--install",
+    "--no-install",
+    "--link",
+    "--no-link",
+    "--deploy",
+    "--environment",
+    "-e",
+  ];
+  if (command !== "bootstrap" && bootstrapOnlyFlags.some((flag) => args.includes(flag))) {
+    throw new Error("Install, link, environment, and deploy options are only valid with bootstrap.");
+  }
+  if (deploy && !linkProject) {
+    throw new Error("--deploy cannot be combined with --no-link.");
+  }
+  if (environmentName && !linkProject) {
+    throw new Error("--environment cannot be combined with --no-link.");
   }
   if (command === "list" && projectDirectory !== ".") {
     throw new Error("--project is only valid with doctor or validate.");
   }
-  if (json && command === "create" && !yes && !dryRun) {
-    throw new Error("JSON creation must be noninteractive. Add --yes or use --dry-run.");
+  if (json && scaffoldingCommand && !yes && !dryRun) {
+    throw new Error("JSON scaffolding must be noninteractive. Add --yes or use --dry-run.");
   }
 
   return {
@@ -230,6 +288,10 @@ export function parseArguments(rawArgs: string[]): CliOptions {
     storage: storage as StorageBackend,
     includeWeb,
     initializeGit,
+    installDependencies,
+    linkProject,
+    deploy,
+    ...(environmentName ? { environmentName } : {}),
     yes,
     force,
     dryRun,

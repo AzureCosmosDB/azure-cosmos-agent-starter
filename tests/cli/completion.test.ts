@@ -32,6 +32,9 @@ describe("shell completion", () => {
     expect(completionCandidates(["w"], scenarios)).toContainEqual(
       expect.objectContaining({ value: "wizard" }),
     );
+    expect(completionCandidates(["b"], scenarios)).toContainEqual(
+      expect.objectContaining({ value: "bootstrap" }),
+    );
     expect(completionCandidates(["create", "--pro"], scenarios)).toContainEqual(
       expect.objectContaining({ value: "--provider" }),
     );

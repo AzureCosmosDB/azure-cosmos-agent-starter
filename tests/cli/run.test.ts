@@ -55,4 +55,36 @@ describe("CLI execution", () => {
     expect(JSON.parse(await readFile(join(destination, "cosmos-project.json"), "utf8")))
       .toMatchObject({ cosmos: { capacity: "serverless" } });
   });
+
+  it("bootstraps and links a project without provisioning Azure", async () => {
+    const destination = await mkdtemp(join(tmpdir(), "cosmos-cli-bootstrap-"));
+    created.push(destination);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    await expect(runCli([
+      "bootstrap",
+      destination,
+      "--yes",
+      "--force",
+      "--no-install",
+      "--no-git",
+      "--environment",
+      "test-dev",
+      "--json",
+    ])).resolves.toBe(0);
+    expect(JSON.parse(String(log.mock.calls.at(-1)?.[0]))).toMatchObject({
+      command: "bootstrap",
+      status: "bootstrapped",
+      destination,
+      environmentName: "test-dev",
+      linked: true,
+      deployed: false,
+    });
+    expect(JSON.parse(
+      await readFile(join(destination, ".cosmos-agent", "context.json"), "utf8"),
+    )).toMatchObject({
+      schemaVersion: 1,
+      environmentName: "test-dev",
+      deploymentStatus: "local",
+    });
+  });
 });

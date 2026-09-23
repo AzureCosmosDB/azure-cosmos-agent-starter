@@ -46,7 +46,9 @@ export async function completeInteractiveOptions(options: CliOptions): Promise<C
   if (options.yes) return options;
   const readline = createInterface({ input: stdin, output: stdout });
   try {
-    console.log("\nCreate Cosmos Agent guided setup");
+    console.log(options.command === "bootstrap"
+      ? "\nBootstrap Cosmos Agent guided setup"
+      : "\nCreate Cosmos Agent guided setup");
     console.log("Press Enter to accept any default.");
     const destination =
       options.destination || (await readline.question("\nProject destination: ")).trim();
@@ -176,6 +178,28 @@ export async function completeInteractiveOptions(options: CliOptions): Promise<C
       ],
       options.initializeGit ? "yes" : "no",
     );
+    const install = options.command === "bootstrap"
+      ? await choose(
+          readline,
+          "Install project dependencies?",
+          [
+            { value: "yes", label: "Yes", description: "Run npm install after scaffolding." },
+            { value: "no", label: "No", description: "Install dependencies later." },
+          ],
+          options.installDependencies ? "yes" : "no",
+        )
+      : "no";
+    const link = options.command === "bootstrap"
+      ? await choose(
+          readline,
+          "Link this directory to a local Cosmos Agent project context?",
+          [
+            { value: "yes", label: "Yes", description: "Create local environment context for Azure deployment." },
+            { value: "no", label: "No", description: "Leave the generated directory unlinked." },
+          ],
+          options.linkProject ? "yes" : "no",
+        )
+      : "no";
     return {
       ...options,
       destination,
@@ -187,6 +211,8 @@ export async function completeInteractiveOptions(options: CliOptions): Promise<C
       capacity,
       includeWeb: web === "yes",
       initializeGit: git === "yes",
+      installDependencies: install === "yes",
+      linkProject: link === "yes",
     };
   } finally {
     readline.close();

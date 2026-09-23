@@ -4,6 +4,7 @@ export const helpText = `create-cosmos-agent - scaffold secure Azure Cosmos DB a
 
 Usage:
   create-cosmos-agent [create] <destination> [options]
+  create-cosmos-agent bootstrap <destination> [options]
   create-cosmos-agent list [--json]
   create-cosmos-agent doctor [project] [--json]
   create-cosmos-agent validate [project] [--json]
@@ -11,6 +12,7 @@ Usage:
 
 Commands:
   create [destination]  Create a project (default command)
+  bootstrap [destination] Scaffold, install, link, and optionally deploy a project
   wizard [destination]  Create with a descriptive guided setup
   list                  List available templates
   doctor [project]      Report security and configuration findings
@@ -26,6 +28,10 @@ Create options:
       --capacity <model>     serverless | autoscale (default: serverless)
       --web / --no-web       Include or exclude the example web interface
       --git / --no-git       Initialize or skip a Git repository
+      --install / --no-install Install or skip dependencies during bootstrap
+      --link / --no-link     Create or skip local project context
+  -e, --environment <name>   Azure environment name for bootstrap
+      --deploy               Provision and deploy with azd (may create billable resources)
   -y, --yes                  Accept prompt defaults; does not allow overwrites
   -f, --force                Allow generated files to overwrite a non-empty destination
       --dry-run              Print the resolved generation plan without writing files
@@ -39,6 +45,8 @@ General options:
 
 Examples:
   create-cosmos-agent wizard my-agent
+  create-cosmos-agent bootstrap my-agent --yes
+  create-cosmos-agent bootstrap my-agent --yes --deploy
   create-cosmos-agent my-agent -t rag-agent-ts --capacity autoscale -y
   create-cosmos-agent create my-agent --provider azure-openai --auth entra -y
   create-cosmos-agent my-agent --dry-run --json

@@ -54,6 +54,29 @@ experience:
 npx create-cosmos-agent@latest wizard my-agent
 ```
 
+## One-command bootstrap
+
+Use `bootstrap` for a Neon-style project setup that scaffolds the application, installs
+dependencies, initializes Git, includes Copilot instructions, and links the directory to a local
+Cosmos Agent environment context:
+
+```powershell
+npx create-cosmos-agent@latest bootstrap my-agent --yes
+```
+
+Bootstrap does not create Azure resources by default. Provision and deploy only when you explicitly
+request it; this operation can create billable resources:
+
+```powershell
+npx create-cosmos-agent@latest bootstrap my-agent `
+  --environment my-agent-dev `
+  --deploy `
+  --yes
+```
+
+Use `--no-install`, `--no-git`, or `--no-link` to skip individual setup steps. The local context is
+stored in `.cosmos-agent/context.json` and excluded from Git.
+
 ## Templates
 
 | Template | Use case |
@@ -122,6 +145,7 @@ Generated production foundations include:
 | Command | Purpose |
 |---|---|
 | `create-cosmos-agent wizard <name>` | Create a project with guided choices |
+| `create-cosmos-agent bootstrap <name>` | Scaffold, install, link, and optionally deploy |
 | `create-cosmos-agent <name> --yes` | Create with recommended defaults |
 | `create-cosmos-agent list` | List available templates |
 | `create-cosmos-agent doctor <project>` | Inspect configuration and security patterns |
