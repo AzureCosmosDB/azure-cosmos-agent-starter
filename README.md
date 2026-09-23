@@ -13,38 +13,28 @@ and an approval-gated consequential action.
 
 ## Quickstart: run locally in five minutes
 
-The npm package is not published yet, so this quickstart runs the CLI from a source checkout.
-It uses the generated in-memory adapter first: no Azure subscription, Cosmos DB account, Docker,
-or credentials are required.
+This quickstart uses the generated in-memory adapter first: no Azure subscription, Cosmos DB
+account, Docker, or credentials are required.
 
-### 1. Build the CLI
-
-```powershell
-git clone https://github.com/sajeetharan/cosmos-agent-starter.git
-cd cosmos-agent-starter
-npm install
-npm run build
-```
-
-### 2. Generate an agent project
+### 1. Generate an agent project
 
 ```powershell
-node dist\index.js ..\my-cosmos-agent `
+npx create-cosmos-agent my-cosmos-agent `
   --template agent-memory-ts `
   --yes `
   --no-git
 ```
 
-### 3. Install and test the generated project
+### 2. Install and test the generated project
 
 ```powershell
-cd ..\my-cosmos-agent
+cd my-cosmos-agent
 npm install
 npm run typecheck
 npm test
 ```
 
-### 4. Start the API without a database
+### 3. Start the API without a database
 
 ```powershell
 $env:MEMORY_BACKEND = "in-memory"
@@ -59,7 +49,7 @@ MEMORY_BACKEND=in-memory npm run dev
 
 The API listens on `http://localhost:3000`. Keep it running and open another terminal.
 
-### 5. Verify health
+### 4. Verify health
 
 ```powershell
 Invoke-RestMethod http://localhost:3000/health
@@ -73,7 +63,7 @@ Expected response:
 }
 ```
 
-### 6. Store and recall a memory
+### 5. Store and recall a memory
 
 ```powershell
 $headers = @{
@@ -112,15 +102,15 @@ Invoke-RestMethod `
 The recall response includes the scoped memory, similarity score, memory ID, and source
 interaction citation.
 
-### 7. Inspect and validate
+### 6. Inspect and validate
 
 ```powershell
 Invoke-RestMethod `
   -Uri http://localhost:3000/api/diagnostics `
   -Headers $headers
 
-node ..\cosmos-agent-starter\dist\index.js doctor .
-node ..\cosmos-agent-starter\dist\index.js validate .
+npx create-cosmos-agent doctor .
+npx create-cosmos-agent validate .
 ```
 
 ### Move to Cosmos DB or Azure
@@ -142,14 +132,6 @@ azd up
 
 Azure deployment can create billable resources. Production uses Managed Identity and Cosmos DB
 data-plane RBAC; it does not generate a production account key.
-
-### After npm publication
-
-Once `create-cosmos-agent` is published, steps 1 and 2 reduce to:
-
-```powershell
-npx create-cosmos-agent my-cosmos-agent --template agent-memory-ts --yes
-```
 
 Without `--yes`, the interactive flow asks for the destination, local mode, Azure capacity,
 example web interface, and Git initialization. `--yes` accepts prompt defaults but **does not

@@ -1,0 +1,48 @@
+name: Verify npm package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published version or dist-tag to verify
+        required: true
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Verify registry and executable
+        env:
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test_directory="$(mktemp -d)"
+          cd "$test_directory"
+          published_version="$(npm view "create-cosmos-agent@$VERSION" version)"
+          cli_version="$(npx --yes "create-cosmos-agent@$VERSION" --version)"
+          test "$cli_version" = "$published_version"
+          npx --yes "create-cosmos-agent@$VERSION" --help >/dev/null
+          npx --yes "create-cosmos-agent@$VERSION" smoke-agent --dry-run --json |
+            node -e '
+              let input = "";
+              process.stdin.on("data", (chunk) => input += chunk);
+              process.stdin.on("end", () => {
+                const result = JSON.parse(input);
+                if (result.status !== "planned" || result.template.id !== "agent-memory-ts") {
+                  process.exit(1);
+                }
+              });
+            '
+          echo "Verified create-cosmos-agent@$published_version"
