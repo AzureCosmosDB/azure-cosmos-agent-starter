@@ -17,11 +17,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sajeetharan/cosmos-agent-starter.git"
+    "url": "git+https://github.com/AzureCosmosDB/azure-cosmos-agent-starter.git"
   },
-  "homepage": "https://github.com/sajeetharan/cosmos-agent-starter#readme",
+  "homepage": "https://github.com/AzureCosmosDB/azure-cosmos-agent-starter#readme",
   "bugs": {
-    "url": "https://github.com/sajeetharan/cosmos-agent-starter/issues"
+    "url": "https://github.com/AzureCosmosDB/azure-cosmos-agent-starter/issues"
   },
   "type": "module",
   "bin": {
