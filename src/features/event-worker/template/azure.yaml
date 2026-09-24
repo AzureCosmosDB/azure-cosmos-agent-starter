@@ -1,6 +1,6 @@
 name: {{PROJECT_NAME}}
 metadata:
-  template: cosmos-agent-starter@0.3.0
+  template: cosmos-agent-starter@0.4.0
 services:
   worker:
     project: .

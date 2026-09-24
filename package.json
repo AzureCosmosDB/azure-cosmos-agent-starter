@@ -1,6 +1,6 @@
 {
   "name": "create-cosmos-agent",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Scaffold customer-ready AI agents with Cosmos DB, React, Entra ID, RAG, and multi-provider models",
   "keywords": [
     "azure",
