@@ -4,7 +4,7 @@ import {
   DeterministicEmbeddingProvider,
   type EmbeddingProvider,
 } from "../../memory/src/index.js";
-import { getAgentStateContainer } from "../../memory/src/cosmos-client.js";
+import { getApplicationDataContainer } from "../../memory/src/cosmos-client.js";
 
 export interface KnowledgeChunk {
   id: string;
@@ -124,7 +124,7 @@ async function firstPage<T>(iterator: QueryIterator<T>) {
 
 export class CosmosKnowledgeStore implements KnowledgeStore {
   constructor(
-    private readonly container: Container = getAgentStateContainer(),
+    private readonly container: Container = getApplicationDataContainer(),
     private readonly embeddings: EmbeddingProvider = new DeterministicEmbeddingProvider(),
   ) {}
 

@@ -46,6 +46,14 @@ describe("scenario composition", () => {
     expect(await readFile(join(first, "cosmos-project.json"), "utf8"))
       .toBe(await readFile(join(second, "cosmos-project.json"), "utf8"));
     expect(await readFile(join(first, ".github", "copilot-instructions.md"), "utf8")).toMatch(/DefaultAzureCredential/);
+    expect(await readFile(join(first, "docs", "architecture.md"), "utf8"))
+      .toMatch(/Conversation store[\s\S]*Durable memory store/);
+    expect(await readFile(join(first, "scripts", "init-emulator.ts"), "utf8"))
+      .toMatch(/conversation-history[\s\S]*agent-memory/);
+    expect(await readFile(join(first, "tests", "scenarios", "multi-tenant.test.ts"), "utf8"))
+      .toMatch(/isolates conversation, durable memory, deletion, and approval flows/);
+    expect(await readFile(join(first, "infra", "modules", "cosmos.bicep"), "utf8"))
+      .toMatch(/name: 'conversation-history'[\s\S]*name: 'agent-memory'/);
   });
   it("composes every customer template with scenario-specific metadata", async () => {
     for (const template of [

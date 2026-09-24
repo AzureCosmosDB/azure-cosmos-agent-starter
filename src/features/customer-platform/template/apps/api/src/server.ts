@@ -16,6 +16,8 @@ import {
 } from "../../../packages/knowledge/src/index.js";
 import {
   CosmosAgentMemoryStore,
+  CosmosConversationStore,
+  InMemoryConversationStore,
   InMemoryMemoryStore,
   resolveMemoryBackend,
 } from "../../../packages/memory/src/index.js";
@@ -55,11 +57,12 @@ app.use(express.json({ limit: "1mb" }));
 
 const useInMemory = resolveMemoryBackend(process.env) === "in-memory";
 const memories = useInMemory ? new InMemoryMemoryStore() : new CosmosAgentMemoryStore();
+const conversations = useInMemory ? new InMemoryConversationStore() : new CosmosConversationStore();
 const actions = useInMemory ? new InMemoryActionStore() : new CosmosActionStore();
 const knowledge = useInMemory ? new InMemoryKnowledgeStore() : new CosmosKnowledgeStore();
 const support = useInMemory ? new InMemorySupportStore() : new CosmosSupportStore();
 const provider = createAIProvider(process.env);
-const agent = new CustomerAgentService(provider, memories, knowledge);
+const agent = new CustomerAgentService(provider, memories, knowledge, conversations);
 const orchestrator = new MultiAgentOrchestrator(provider);
 
 const context = (request: express.Request) => authenticateRequest(request.headers, process.env);
@@ -114,6 +117,7 @@ app.post("/api/memories", async (request, response, next) => {
       content: z.string().trim().min(1).max(10_000),
       threadId: z.string().trim().min(1).max(128).default("default"),
       interactionId: z.string().trim().min(1),
+      retentionClass: z.enum(["session", "standard", "long-term"]).default("standard"),
     }).parse(request.body);
     const requestContext = await context(request);
     response.status(201).json(await memories.remember({
@@ -121,7 +125,7 @@ app.post("/api/memories", async (request, response, next) => {
       agentId: scenario.id,
       confidence: 1,
       ...body,
-      source: { interactionId: body.interactionId },
+      provenance: { interactionId: body.interactionId },
     }));
   } catch (error) {
     next(error);

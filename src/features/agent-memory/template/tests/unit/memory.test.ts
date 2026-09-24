@@ -20,13 +20,26 @@ describe("memory store", () => {
     const store = new InMemoryMemoryStore();
     const memory = await store.remember({
       context, threadId: "thread-1", agentId: "agent-1", type: "preference",
-      content: "Prefers email notifications", source: { interactionId: "interaction-1", messageId: "message-1" },
+      content: "Prefers email notifications", provenance: { interactionId: "interaction-1", messageId: "message-1" },
       confidence: 0.9,
     });
     const recalled = await store.recall({ context, query: "email notification preference", limit: 5 });
-    expect(recalled[0]?.memory.id).toBe(memory.id);
-    expect(recalled[0]?.citation).toEqual({
+    expect(memory).toMatchObject({
+      schemaVersion: 2,
+      retentionClass: "standard",
+      ttl: 7_776_000,
+      embeddingVersion: "deterministic-v1",
+    });
+    expect(memory.lastValidatedAt).toBe(memory.createdAt);
+    expect(recalled.results[0]?.memory.id).toBe(memory.id);
+    expect(recalled.results[0]?.citation).toEqual({
       memoryId: memory.id, interactionId: "interaction-1", messageId: "message-1",
+    });
+    expect(recalled.trace).toMatchObject({
+      tenantId: context.tenantId,
+      userId: context.userId,
+      selectedMemoryIds: [memory.id],
+      embeddingVersion: "deterministic-v1",
     });
     const page = await store.list({ context, limit: 1 });
     expect(page.items).toHaveLength(1);

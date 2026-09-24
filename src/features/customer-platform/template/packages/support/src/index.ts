@@ -1,6 +1,6 @@
 import type { Container, SqlQuerySpec } from "@azure/cosmos";
 import type { RequestContext } from "../../auth/src/index.js";
-import { getAgentStateContainer } from "../../memory/src/cosmos-client.js";
+import { getApplicationDataContainer } from "../../memory/src/cosmos-client.js";
 
 export type TicketStatus = "open" | "in-progress" | "waiting-on-customer" | "resolved";
 export type TicketPriority = "low" | "normal" | "high" | "urgent";
@@ -78,7 +78,7 @@ export class InMemorySupportStore implements SupportStore {
 }
 
 export class CosmosSupportStore implements SupportStore {
-  constructor(private readonly container: Container = getAgentStateContainer()) {}
+  constructor(private readonly container: Container = getApplicationDataContainer()) {}
 
   async create(context: RequestContext, input: CreateTicketInput): Promise<SupportTicket> {
     const ticket = newTicket(context, input);
@@ -107,7 +107,7 @@ export class CosmosSupportStore implements SupportStore {
   }
 
   async updateStatus(context: RequestContext, id: string, status: TicketStatus): Promise<SupportTicket> {
-    const item = this.container.item(id, [context.tenantId, context.userId, id]);
+    const item = this.container.item(id, [context.tenantId, context.userId]);
     const response = await item.read<SupportTicket & { _etag: string }>();
     if (!response.resource) throw new Error("Support ticket not found in the authenticated user scope.");
     const updated: SupportTicket = {

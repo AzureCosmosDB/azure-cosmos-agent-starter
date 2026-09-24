@@ -44,11 +44,12 @@ app.post("/api/memories", async (request, response, next) => {
       content: z.string().min(1).max(10_000),
       threadId: z.string().min(1).max(128).default("default"),
       interactionId: z.string().min(1),
+      retentionClass: z.enum(["session", "standard", "long-term"]).default("standard"),
     }).parse(request.body);
     const context = contextFromHeaders(request);
     response.status(201).json(await memories.remember({
       context, agentId: "sample-agent", confidence: 1, ...body,
-      source: { interactionId: body.interactionId },
+      provenance: { interactionId: body.interactionId },
     }));
   } catch (error) { next(error); }
 });

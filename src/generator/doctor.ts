@@ -80,7 +80,7 @@ export async function runDoctor(root: string): Promise<DoctorFinding[]> {
     findings.push(finding("error", "MANAGED_IDENTITY", "Managed Identity client setup is missing", "No DefaultAzureCredential", "Use DefaultAzureCredential with the Cosmos endpoint."));
   }
   if (manifest.cosmos.vectorSearch && (!combined.includes("vectorEmbeddingPolicy") || !combined.includes("vectorIndexes"))) {
-    findings.push(finding("error", "VECTOR_POLICY", "Vector-enabled manifest lacks a vector policy", "cosmos.vectorSearch=true", "Define vectorEmbeddingPolicy and vectorIndexes when creating agent-state."));
+    findings.push(finding("error", "VECTOR_POLICY", "Vector-enabled manifest lacks a vector policy", "cosmos.vectorSearch=true", "Define vectorEmbeddingPolicy and vectorIndexes when creating agent-memory."));
   }
   if (
     manifest.cosmos.capacity === "serverless" &&

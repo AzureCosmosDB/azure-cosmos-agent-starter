@@ -4,7 +4,7 @@ import {
   CosmosAgentMemoryStore,
   type AgentMemory,
 } from "../../packages/memory/src/index.js";
-import { getAgentStateContainer } from "../../packages/memory/src/cosmos-client.js";
+import { getAgentMemoryContainer } from "../../packages/memory/src/cosmos-client.js";
 
 const enabled = process.env.RUN_COSMOS_INTEGRATION === "true";
 describe.skipIf(!enabled)("Cosmos emulator integration", () => {
@@ -23,18 +23,21 @@ describe.skipIf(!enabled)("Cosmos emulator integration", () => {
       agentId: "integration-agent",
       type: "fact",
       content: "The integration fixture prefers concise answers.",
-      source: { interactionId: suffix },
+      provenance: { interactionId: suffix },
       confidence: 1,
     });
     try {
       expect((await store.list({ context, limit: 1 })).items[0]?.id).toBe(memory.id);
-      expect((await store.recall({ context, query: "concise response preference", limit: 3 }))[0]?.citation.memoryId)
+      expect((await store.recall({
+        context,
+        query: "concise response preference",
+        limit: 3,
+      })).results[0]?.citation.memoryId)
         .toBe(memory.id);
 
-      const item = getAgentStateContainer().item(memory.id, [
+      const item = getAgentMemoryContainer().item(memory.id, [
         context.tenantId,
         context.userId,
-        memory.threadId,
       ]);
       const read = await item.read<AgentMemory & { _etag: string }>();
       const stale = read.resource;
