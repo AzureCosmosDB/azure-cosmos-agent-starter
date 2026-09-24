@@ -9,15 +9,19 @@ describe("tenant and action security", () => {
     const store = new InMemoryMemoryStore();
     const memory = await store.remember({
       context: b, threadId: "thread", agentId: "agent", type: "fact", content: "Tenant B secret",
-      source: { interactionId: "i" }, confidence: 1,
+      provenance: { interactionId: "i" }, confidence: 1,
     });
-    expect(await store.recall({ context: a, query: "secret", limit: 20 })).toEqual([]);
+    expect((await store.recall({ context: a, query: "secret", limit: 20 })).results).toEqual([]);
     await expect(store.forget({ context: a, id: memory.id })).rejects.toThrow(/scope/i);
   });
   it("ignores model identity because tools require trusted context", async () => {
     const store = new InMemoryMemoryStore();
     const modelArguments = { tenantId: "tenant-b", userId: "user-b", query: "secret", limit: 5 };
-    expect(await store.recall({ context: a, query: modelArguments.query, limit: modelArguments.limit })).toEqual([]);
+    expect((await store.recall({
+      context: a,
+      query: modelArguments.query,
+      limit: modelArguments.limit,
+    })).results).toEqual([]);
   });
   it("forbids self approval and unapproved execution", () => {
     const store = new InMemoryActionStore();

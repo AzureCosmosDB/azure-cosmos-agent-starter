@@ -38,14 +38,61 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2025-04-15
   parent: account
   name: 'cosmos-agent'
 }
-resource state 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2025-04-15' = {
+resource conversations 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2025-04-15' = {
   parent: database
-  name: 'agent-state'
+  name: 'conversation-history'
   properties: {
     resource: {
-      id: 'agent-state'
+      id: 'conversation-history'
       partitionKey: {
         paths: ['/tenantId', '/userId', '/threadId']
+        kind: 'MultiHash'
+        version: 2
+      }
+      defaultTtl: 2592000
+    }
+  }
+  dependsOn: [serverlessDatabase, autoscaleDatabase]
+}
+resource memories 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2025-04-15' = {
+  parent: database
+  name: 'agent-memory'
+  properties: {
+    resource: {
+      id: 'agent-memory'
+      partitionKey: {
+        paths: ['/tenantId', '/userId']
+        kind: 'MultiHash'
+        version: 2
+      }
+      defaultTtl: 7776000
+      vectorEmbeddingPolicy: {
+        vectorEmbeddings: [{
+          path: '/embedding'
+          dataType: 'float32'
+          distanceFunction: 'cosine'
+          dimensions: 8
+        }]
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        automatic: true
+        includedPaths: [{ path: '/*' }]
+        excludedPaths: [{ path: '/embedding/*' }]
+        vectorIndexes: [{ path: '/embedding', type: 'quantizedFlat' }]
+      }
+    }
+  }
+  dependsOn: [serverlessDatabase, autoscaleDatabase]
+}
+resource applicationData 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2025-04-15' = {
+  parent: database
+  name: 'application-data'
+  properties: {
+    resource: {
+      id: 'application-data'
+      partitionKey: {
+        paths: ['/tenantId', '/userId']
         kind: 'MultiHash'
         version: 2
       }

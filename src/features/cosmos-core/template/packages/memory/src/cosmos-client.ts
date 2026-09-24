@@ -25,9 +25,19 @@ export function getCosmosClient(): CosmosClient {
   return singleton;
 }
 
-export function getAgentStateContainer() {
+export function getAgentMemoryContainer() {
   const database = process.env.COSMOS_DATABASE ?? "cosmos-agent";
-  return getCosmosClient().database(database).container("agent-state");
+  return getCosmosClient().database(database).container("agent-memory");
+}
+
+export function getConversationHistoryContainer() {
+  const database = process.env.COSMOS_DATABASE ?? "cosmos-agent";
+  return getCosmosClient().database(database).container("conversation-history");
+}
+
+export function getApplicationDataContainer() {
+  const database = process.env.COSMOS_DATABASE ?? "cosmos-agent";
+  return getCosmosClient().database(database).container("application-data");
 }
 
 export function getActionRequestsContainer() {

@@ -1,7 +1,12 @@
 import type { AIProvider } from "../../ai/src/index.js";
 import type { RequestContext } from "../../auth/src/index.js";
 import type { KnowledgeCitation, KnowledgeStore } from "../../knowledge/src/index.js";
-import type { AgentMemoryStore, MemoryResult } from "../../memory/src/index.js";
+import type {
+  AgentMemoryStore,
+  ConversationStore,
+  MemoryResult,
+  RetrievalTrace,
+} from "../../memory/src/index.js";
 
 export interface ChatInput {
   message: string;
@@ -24,6 +29,7 @@ export interface ChatResult {
   provider: string;
   model: string;
   citations: AgentCitation[];
+  retrievalTrace: RetrievalTrace;
   correlationId: string;
 }
 
@@ -52,6 +58,7 @@ export class CustomerAgentService {
     private readonly provider: AIProvider,
     private readonly memories: AgentMemoryStore,
     private readonly knowledge: KnowledgeStore,
+    private readonly conversations: ConversationStore,
   ) {}
 
   async chat(context: RequestContext, input: ChatInput): Promise<ChatResult> {
@@ -60,8 +67,8 @@ export class CustomerAgentService {
       input.useKnowledge ? this.knowledge.search(context, input.message, 5) : Promise.resolve([]),
     ]);
     const contextSections = [
-      recalledMemories.length
-        ? `Relevant user memories:\n${recalledMemories.map((result) => `- ${result.memory.content}`).join("\n")}`
+      recalledMemories.results.length
+        ? `Relevant user memories:\n${recalledMemories.results.map((result) => `- ${result.memory.content}`).join("\n")}`
         : "",
       retrievedKnowledge.length
         ? `Grounding documents:\n${retrievedKnowledge.map((result) => `- ${result.title}: ${result.excerpt}`).join("\n")}`
@@ -83,17 +90,20 @@ export class CustomerAgentService {
       temperature: 0.2,
     });
     const interactionId = crypto.randomUUID();
-    await this.memories.remember({
-      context,
-      threadId: input.threadId,
-      agentId: "{{SCENARIO_ID}}",
-      type: "event",
-      content: input.message,
-      source: { interactionId },
-      confidence: 1,
-      modelVersion: completion.model,
-      promptVersion: "customer-platform-v1",
-    });
+    await Promise.all([
+      this.conversations.append({
+        context,
+        threadId: input.threadId,
+        role: "user",
+        content: input.message,
+      }),
+      this.conversations.append({
+        context,
+        threadId: input.threadId,
+        role: "assistant",
+        content: completion.content,
+      }),
+    ]);
     return {
       id: interactionId,
       threadId: input.threadId,
@@ -101,9 +111,10 @@ export class CustomerAgentService {
       provider: completion.provider,
       model: completion.model,
       citations: [
-        ...memoryCitations(recalledMemories),
+        ...memoryCitations(recalledMemories.results),
         ...knowledgeCitations(retrievedKnowledge),
       ],
+      retrievalTrace: recalledMemories.trace,
       correlationId: context.correlationId,
     };
   }
