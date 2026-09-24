@@ -31,7 +31,10 @@ describe("project bootstrap", () => {
       commands.push(command);
     });
     expect(commands).toHaveLength(3);
-    expect(commands[0]?.args.join(" ")).toMatch(/npm install$/);
+    expect([
+      commands[0]?.executable,
+      ...(commands[0]?.args ?? []),
+    ].join(" ")).toMatch(/npm install$/);
     expect(commands[1]).toMatchObject({ executable: "git", args: ["init"] });
     expect(commands[2]).toMatchObject({
       executable: "azd",
