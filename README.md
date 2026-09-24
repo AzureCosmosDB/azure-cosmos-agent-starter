@@ -5,12 +5,12 @@ Build production-oriented TypeScript AI agents with a guided CLI and an Azure Co
 [![npm version](https://img.shields.io/npm/v/create-cosmos-agent?logo=npm&color=CB3837)](https://www.npmjs.com/package/create-cosmos-agent)
 [![npm downloads](https://img.shields.io/npm/dm/create-cosmos-agent?logo=npm)](https://www.npmjs.com/package/create-cosmos-agent)
 [![Node.js](https://img.shields.io/node/v/create-cosmos-agent?logo=node.js)](https://www.npmjs.com/package/create-cosmos-agent)
-[![GitHub stars](https://img.shields.io/github/stars/sajeetharan/cosmos-agent-starter?logo=github)](https://github.com/sajeetharan/cosmos-agent-starter/stargazers)
-[![License](https://img.shields.io/github/license/sajeetharan/cosmos-agent-starter)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/AzureCosmosDB/azure-cosmos-agent-starter?logo=github)](https://github.com/AzureCosmosDB/azure-cosmos-agent-starter/stargazers)
+[![License](https://img.shields.io/github/license/AzureCosmosDB/azure-cosmos-agent-starter)](LICENSE)
 
 [npm package](https://www.npmjs.com/package/create-cosmos-agent) ·
 [documentation](#quickstart) ·
-[report an issue](https://github.com/sajeetharan/cosmos-agent-starter/issues) ·
+[report an issue](https://github.com/AzureCosmosDB/azure-cosmos-agent-starter/issues) ·
 [contribute](CONTRIBUTING.md)
 
 `create-cosmos-agent` generates a complete API and React application with memory, vector retrieval,
@@ -20,9 +20,9 @@ Cosmos DB without replacing the application contracts.
 
 ## See it in action
 
-[![create-cosmos-agent overview preview](docs/media/create-cosmos-agent-preview.gif)](https://raw.githubusercontent.com/sajeetharan/cosmos-agent-starter/main/docs/media/create-cosmos-agent-overview.mp4)
+[![create-cosmos-agent overview preview](docs/media/create-cosmos-agent-preview.gif)](https://raw.githubusercontent.com/AzureCosmosDB/azure-cosmos-agent-starter/main/docs/media/create-cosmos-agent-overview.mp4)
 
-[Watch the full overview video](https://raw.githubusercontent.com/sajeetharan/cosmos-agent-starter/main/docs/media/create-cosmos-agent-overview.mp4).
+[Watch the full overview video](https://raw.githubusercontent.com/AzureCosmosDB/azure-cosmos-agent-starter/main/docs/media/create-cosmos-agent-overview.mp4).
 
 ## Quickstart
 
@@ -174,7 +174,7 @@ Azure deployment can create billable resources.
 ## Corporate npm proxy fallback
 
 If your corporate npm proxy has not mirrored the latest release, download the `.tgz` package from
-[GitHub Releases](https://github.com/sajeetharan/cosmos-agent-starter/releases) and run:
+[GitHub Releases](https://github.com/AzureCosmosDB/azure-cosmos-agent-starter/releases) and run:
 
 ```powershell
 npx --yes --package .\create-cosmos-agent-0.4.0.tgz create-cosmos-agent my-agent --yes
@@ -183,7 +183,7 @@ npx --yes --package .\create-cosmos-agent-0.4.0.tgz create-cosmos-agent my-agent
 ## Develop the CLI
 
 ```powershell
-git clone https://github.com/sajeetharan/cosmos-agent-starter.git
+git clone https://github.com/AzureCosmosDB/azure-cosmos-agent-starter.git
 cd cosmos-agent-starter
 npm install
 npm run validate
